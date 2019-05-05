@@ -40,10 +40,12 @@ int main() {
     char ssid[32+1];
     char passwd[64+1];
 
-    rda5991h_smartlink_irq_init();
+    //;rda5991h_smartlink_irq_init();
+	
     rda5981_set_auth_timeout(1);
+	
     ret = rda5981_flash_read_sta_data(ssid, passwd);
-    if (ret == 0 && strlen(ssid)) {//get ssid from flash
+    if (0 || ret == 0 && strlen(ssid)) {//get ssid from flash
         printf("get ssid from flash: ssid:%s, pass:%s\r\n",
             ssid, passwd);
     } else {//need to airkiss
@@ -74,6 +76,7 @@ int main() {
         }
     }
     while (true) {
+		printf("roll\r\n");
     }
 }
 

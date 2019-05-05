@@ -202,7 +202,7 @@ int main() {
     rda5991h_smartlink_irq_init();
 
     ret = rda5981_flash_read_sta_data(ssid, passwd);
-    if (ret==0 && strlen(ssid)) {//get ssid from flash
+    if (0 && (ret==0 && strlen(ssid))) {//get ssid from flash
         printf("get ssid from flash: ssid:%s, pass:%s\r\n",
             ssid, passwd);
     } else {//need to smartconfig
