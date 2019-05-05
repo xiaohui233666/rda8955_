@@ -4,6 +4,7 @@
 #include "rda_sys_wrapper.h"
 #include "rda5981_sniffer.h"
 #include "inet.h"
+#include "rda_airkiss.h"
 
 typedef struct rda_sema {
     osSemaphoreId    sema_id;
@@ -52,7 +53,7 @@ enum TYPESUBTYPE_T{
 
 WiFiStackInterface wifi;
 rda_sema_t sw_mode = {NULL,};;
-rda5981_scan_result scan_result[64] = {{0,},};
+//rda5981_scan_result scan_result[64] = {{0,},};
 
 static char hex_to_number(char a)
 {
@@ -184,9 +185,18 @@ int main() {
     }
 
     wifi.set_msg_queue(main_msgQ);
+	
+	wifi.connect("Bee-WiFi(2.4G)", "Beephone");
 
     printf("Start softAP\r\n");
-    ret = wifi.start_ap("RRDD-8889", NULL, 11);
+    ret = wifi.start_ap("RRDD-8889", NULL ,11);
+	char ssid[100],pw[100];
+	printf("airkiss_version %s\r\n",airkiss_version());
+	osDelay(200);
+	while(get_ssid_pw_from_airkiss(ssid, pw));
+	airkiss_sendrsp_to_host(&wifi);
+	printf("ssid %s passwd %s\r\n",ssid,pw);
+	
     if(ret) {
         printf("start ap err: %d\r\n", ret);
         return -1;
@@ -227,15 +237,17 @@ int main() {
 	unsigned int num;
     while (true) {
 		num=wifi.ap_join_info(sta_list,100);
-		printf("joined sta num: %d\r\n",num);
+		printf("get_ip_address:%s\r\n",wifi.get_ip_address());
+		printf("get_ip_address_ap:%s ,get_dhcp_start_ap: %s\r\n",wifi.get_ip_address_ap(),wifi.get_dhcp_start_ap());
+		printf("					joined sta num: %d\r\n",num);
 		osDelay(200);
 		while(num--)
 		{
 			printf("joined sta:ip %s mac: %02x:%02x:%02x:%02x:%02x:%02x\r\n",inet_ntoa((*sta_list).ip),(*sta_list).mac[0],(*sta_list).mac[1],(*sta_list).mac[2],(*sta_list).mac[3],(*sta_list).mac[4],(*sta_list).mac[5]);
 			sta_list++;
 		}
-		/*
-        rda_msg_get(main_msgQ, &msg, osWaitForever);
+		
+        rda_msg_get(main_msgQ, &msg, 200);
         switch(msg)
         {
             case MAIN_RECONNECT: {
@@ -262,6 +274,6 @@ int main() {
                 printf("unknown msg\r\n");
                 break;
         }
-		*/
+		
     }
 }

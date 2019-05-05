@@ -1,7 +1,8 @@
 {
     "target_overrides": {
         "UNO_91H": {
-            "target.features_add": ["LWIP"]
+            "target.features_add": ["LWIP"],
+			"target.features_add": ["LWIP", "GPADCKEY", "AIRKISS"]
         }
     }
 }
