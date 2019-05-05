@@ -1,0 +1,40 @@
+(ExpressProject ""
+  (ProjectVersion "19981106")
+  (ProjectType "PCB")
+  (Folder "Design Resources"
+    (Folder "Library")
+    (File ".\rda5981a_hdk_v1.4_20171222.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (NoModify))
+  (Folder "Outputs")
+  (Folder "Referenced Projects")
+  (PartMRUSelector)
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources" ".\rda5981a_hdk_v1.4_20171222.dsn")
+      (Path "Design Resources" ".\rda5981a_hdk_v1.4_20171222.dsn" "RDA5981A")
+      (Path "Design Resources" ".\rda5981a_hdk_v1.4_20171222.dsn"
+         "Design Cache")
+      (Select "Design Resources" ".\rda5981a_hdk_v1.4_20171222.dsn" "RDA5981A"
+         "PAGE1"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -30 0 200 0 477"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -30 25 1229 25 389")
+        (Scroll "435 400")
+        (Zoom "196")
+        (Occurrence "/"))
+      (Path
+         "E:\≤‚ ‘\PCB\RDA5991H\RDA5981X-HDK-V1.4\SCH\RDA5981A_HDK_V1.4_20171222.DSN")
+      (Schematic "RDA5981A")
+      (Page "PAGE1")))
+  (MPSSessionName "haijingliu"))

@@ -1,0 +1,15 @@
+.\build\image.o: bootloader\image.c
+.\build\image.o: bootloader\bootloader.h
+.\build\image.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\image.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\image.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\image.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\image.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\build\image.o: ./bootloader/hw/rda5981/bootloader_config.h
+.\build\image.o: ./hal/rda/rda_api.h
+.\build\image.o: ./hal/rda/board.h
+.\build\image.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\image.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h
+.\build\image.o: bootloader\hw/boot_cm.h
+.\build\image.o: bootloader\crc32.h
+.\build\image.o: bootloader\flash.h

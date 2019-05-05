@@ -1,0 +1,2 @@
+pyserial<4.0,>=3.0
+mbed-os-tools<0.1.0

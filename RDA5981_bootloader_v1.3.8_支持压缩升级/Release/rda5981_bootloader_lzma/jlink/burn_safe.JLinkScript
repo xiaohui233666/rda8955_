@@ -1,0 +1,3 @@
+h
+loadbin safe.bin,0xe0000
+q

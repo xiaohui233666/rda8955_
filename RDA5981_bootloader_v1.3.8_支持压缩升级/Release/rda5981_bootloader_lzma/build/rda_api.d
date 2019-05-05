@@ -1,0 +1,9 @@
+.\build\rda_api.o: hal\rda\rda_api.c
+.\build\rda_api.o: hal\rda\rda_api.h
+.\build\rda_api.o: ./hal/rda/board.h
+.\build\rda_api.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\rda_api.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\rda_api.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\rda_api.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\rda_api.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\rda_api.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h

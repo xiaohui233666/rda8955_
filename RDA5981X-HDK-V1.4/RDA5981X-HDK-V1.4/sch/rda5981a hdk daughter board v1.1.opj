@@ -1,0 +1,53 @@
+(ExpressProject ""
+  (ProjectVersion "19981106")
+  (ProjectType "PCB")
+  (Folder "Design Resources"
+    (Folder "Library")
+    (File ".\rda5981a hdk daughter board v1.1.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (NoModify)
+    (Netlist_TAB "8")
+    (OTHER_Part_Value "{Value}")
+    (OTHER_Netlist_File "RDA5981A HDK DAUGHTER BOARD V1.1.asc")
+    (OTHER_Netlist_File2 "RDA5981A HDK DAUGHTER BOARD V1.1.CMP")
+    (OTHER_View_Output "FALSE")
+    (OTHER_View_Output2 "FALSE")
+    (OTHER_Formatter "orPadspcb.dll")
+    (OTHER_PCB_Footprint "{PCB Footprint}")
+    (OTHER_Switch0 "TRUE")
+    (OTHER_Switch1 "FALSE")
+    (OTHER_Switch2 "FALSE")
+    (OTHER_Switch3 "FALSE")
+    (OTHER_Switch4 "FALSE")
+    (OTHER_Switch5 "FALSE")
+    (OTHER_Switch6 "FALSE"))
+  (Folder "Outputs"
+    (File ".\rda5981a hdk daughter board v1.1.asc"
+      (Type "Report")))
+  (Folder "Referenced Projects")
+  (PartMRUSelector)
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources"
+         "D:\work\customer\WIFI\bak\RDA5981A HDK\V1.3\sch\rda5981a hdk daughter board v1.1.dsn")
+      (Path "Design Resources"
+         "D:\work\customer\WIFI\bak\RDA5981A HDK\V1.3\sch\rda5981a hdk daughter board v1.1.dsn"
+         "RDA5981A")
+      (Path "Design Resources"
+         "D:\work\customer\WIFI\bak\RDA5981A HDK\V1.3\sch\rda5981a hdk daughter board v1.1.dsn"
+         "Design Cache")
+      (Path "Outputs")
+      (Select "Design Resources"
+         "D:\work\customer\WIFI\bak\RDA5981A HDK\V1.3\sch\rda5981a hdk daughter board v1.1.dsn"
+         "Design Cache" "CON-T-T05-BB10F301"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 -8 -30 0 200 0 324"))
+      (Tab 0)))
+  (ISPCBBASICLICENSE "false")
+  (MPSSessionName "yongzeli"))

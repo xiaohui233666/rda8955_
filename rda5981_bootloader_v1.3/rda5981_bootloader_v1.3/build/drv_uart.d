@@ -1,0 +1,10 @@
+.\build\drv_uart.o: hal\rda\drv_uart.c
+.\build\drv_uart.o: ./hal/rda/board.h
+.\build\drv_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\drv_uart.o: ./hal/rda/drv_uart.h
+.\build\drv_uart.o: ./hal/rda/rda_api.h
+.\build\drv_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\drv_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\drv_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\drv_uart.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\drv_uart.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h

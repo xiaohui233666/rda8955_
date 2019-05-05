@@ -1,0 +1,14 @@
+.\build\flash.o: bootloader\hw\rda5981\flash.c
+.\build\flash.o: ./bootloader/bootloader.h
+.\build\flash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\flash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\flash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\flash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\flash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\build\flash.o: ./bootloader/hw/rda5981/bootloader_config.h
+.\build\flash.o: ./hal/rda/rda_api.h
+.\build\flash.o: ./hal/rda/board.h
+.\build\flash.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\flash.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h
+.\build\flash.o: ./bootloader/hw/boot_cm.h
+.\build\flash.o: ./bootloader/flash.h

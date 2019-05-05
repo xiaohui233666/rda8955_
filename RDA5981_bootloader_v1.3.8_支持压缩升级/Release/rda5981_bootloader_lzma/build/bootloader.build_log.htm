@@ -1,0 +1,69 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.25.2.0
+Copyright (C) 2018 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: hui Administrator, hui, LIC=X1EWF-6LJC9-5ATDF-672DU-DVAY9-8A1GE
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.25.2.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARMCM3.DLL V5.25.2.0
+Dialog DLL:      DCM.DLL V1.17.1.0
+Target DLL:      UL2CM3.DLL V1.160.12.0
+Dialog DLL:      TCM.DLL V1.35.1.0
+ 
+<h2>Project:</h2>
+F:\rda\rda5981_sdk\RDA5981_bootloader_v1.3.8_Ö§³ÖÑ¹ËõÉý¼¶\Release\rda5981_bootloader_lzma\boot.uvprojx
+Project File Date:  04/17/2019
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'bootloader'
+compiling bootloader.c...
+compiling crc32.c...
+compiling firmware.c...
+compiling image.c...
+compiling flash.c...
+compiling flash_layout.c...
+compiling bootloader_ping_pong.c...
+compiling bootloader_triple_area.c...
+compiling bootloader_copy.c...
+bootloader\bootloader_copy.c(117): warning:  #223-D: function "lzma_update" declared implicitly
+                        if (0 == (status = lzma_update((uint32_t)src_ptr, (uint32_t)header->size,
+bootloader\bootloader_copy.c: 1 warning, 0 errors
+compiling main.c...
+compiling retarget.c...
+compiling board.c...
+compiling drv_uart.c...
+compiling rda_api.c...
+compiling system_rda5981.c...
+assembling startup_rda5981.s...
+linking...
+Program Size: Code=11524 RO-data=412 RW-data=20 ZI-data=102420  
+After Build - User command #1: fromelf --bin .\build\bootloader.axf --output bootloader.bin
+".\build\bootloader.axf" - 0 Error(s), 1 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.3.0.pack
+                ARM.CMSIS.5.3.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_bootloader
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include
+
+<h2>Collection of Component Files used:</h2>
+Build Time Elapsed:  00:00:08
+</pre>
+</body>
+</html>

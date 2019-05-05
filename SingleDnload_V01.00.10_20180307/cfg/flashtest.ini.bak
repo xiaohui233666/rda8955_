@@ -1,0 +1,11 @@
+[download]
+BaudRate=921600
+FlashSize=1MByte
+MacAddr=
+language=English
+FileName=D:/wl-work-projects/91Hdownload/blinky_0x1000.bin
+AutoTest=1
+File2Name=
+IsErase5981=0
+EraseAddr5981=
+EraseSize5981=

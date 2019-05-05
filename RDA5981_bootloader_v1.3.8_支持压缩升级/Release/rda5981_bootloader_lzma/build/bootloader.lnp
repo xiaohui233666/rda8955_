@@ -1,0 +1,22 @@
+--cpu=Cortex-M4 --fpu=SoftVFP
+".\build\bootloader.o"
+".\build\crc32.o"
+".\build\firmware.o"
+".\build\image.o"
+".\build\flash.o"
+".\build\flash_layout.o"
+".\build\bootloader_ping_pong.o"
+".\build\bootloader_triple_area.o"
+".\build\bootloader_copy.o"
+".\build\main.o"
+".\build\retarget.o"
+".\build\board.o"
+".\build\drv_uart.o"
+".\build\rda_api.o"
+".\build\system_rda5981.o"
+".\build\startup_rda5981.o"
+".\lzma\lib\lzma.lib"
+--library_type=microlib --strict --scatter ".\build\bootloader.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\bootloader.map" -o .\build\bootloader.axf

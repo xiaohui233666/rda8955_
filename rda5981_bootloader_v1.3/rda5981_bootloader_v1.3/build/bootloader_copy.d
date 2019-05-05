@@ -1,0 +1,16 @@
+.\build\bootloader_copy.o: bootloader\bootloader_copy.c
+.\build\bootloader_copy.o: bootloader\bootloader_copy.h
+.\build\bootloader_copy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\bootloader_copy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\bootloader_copy.o: bootloader\bootloader.h
+.\build\bootloader_copy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\bootloader_copy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\bootloader_copy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\build\bootloader_copy.o: ./bootloader/hw/rda5981/bootloader_config.h
+.\build\bootloader_copy.o: ./hal/rda/rda_api.h
+.\build\bootloader_copy.o: ./hal/rda/board.h
+.\build\bootloader_copy.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\bootloader_copy.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h
+.\build\bootloader_copy.o: bootloader\hw/boot_cm.h
+.\build\bootloader_copy.o: bootloader\crc32.h
+.\build\bootloader_copy.o: bootloader\flash.h

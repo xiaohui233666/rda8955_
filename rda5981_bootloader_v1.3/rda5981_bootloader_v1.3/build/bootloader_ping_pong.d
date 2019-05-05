@@ -1,0 +1,15 @@
+.\build\bootloader_ping_pong.o: bootloader\bootloader_ping_pong.c
+.\build\bootloader_ping_pong.o: bootloader\bootloader_ping_pong.h
+.\build\bootloader_ping_pong.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\bootloader_ping_pong.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\bootloader_ping_pong.o: bootloader\bootloader.h
+.\build\bootloader_ping_pong.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\bootloader_ping_pong.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\bootloader_ping_pong.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\build\bootloader_ping_pong.o: ./bootloader/hw/rda5981/bootloader_config.h
+.\build\bootloader_ping_pong.o: ./hal/rda/rda_api.h
+.\build\bootloader_ping_pong.o: ./hal/rda/board.h
+.\build\bootloader_ping_pong.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\bootloader_ping_pong.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h
+.\build\bootloader_ping_pong.o: bootloader\hw/boot_cm.h
+.\build\bootloader_ping_pong.o: bootloader\crc32.h

@@ -1,0 +1,16 @@
+.\build\bootloader_triple_area.o: bootloader\bootloader_triple_area.c
+.\build\bootloader_triple_area.o: bootloader\bootloader_triple_area.h
+.\build\bootloader_triple_area.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\build\bootloader_triple_area.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+.\build\bootloader_triple_area.o: bootloader\bootloader.h
+.\build\bootloader_triple_area.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\bootloader_triple_area.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\build\bootloader_triple_area.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\build\bootloader_triple_area.o: ./bootloader/hw/rda5981/bootloader_config.h
+.\build\bootloader_triple_area.o: ./hal/rda/rda_api.h
+.\build\bootloader_triple_area.o: ./hal/rda/board.h
+.\build\bootloader_triple_area.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\bootloader_triple_area.o: ./hal/rda/device/rda5981/rda5981_bootrom_api.h
+.\build\bootloader_triple_area.o: bootloader\hw/boot_cm.h
+.\build\bootloader_triple_area.o: bootloader\crc32.h
+.\build\bootloader_triple_area.o: bootloader\flash.h

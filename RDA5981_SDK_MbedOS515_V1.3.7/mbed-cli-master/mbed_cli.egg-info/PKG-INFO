@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: mbed-cli
+Version: 1.10.0
+Summary: Arm Mbed command line tool for repositories version control, publishing and updating code from remotely hosted repositories (GitHub, GitLab and mbed.com), and invoking Mbed OS own build system and export functions, among other operations
+Home-page: http://github.com/ARMmbed/mbed-cli
+Author: ARM mbed
+Author-email: support@mbed.org
+License: UNKNOWN
+Description: ## Introduction
+        
+        Arm Mbed CLI is the name of the Arm Mbed command-line tool, packaged as `mbed-cli`. Mbed CLI enables Git- and Mercurial-based version control, dependencies management, code publishing, support for remotely hosted repositories (GitHub, GitLab and mbed.org), use of the Arm Mbed OS build system and export functions and other operations.
+        
+        For details about installing and using Mbed CLI, please see [Mbed CLI's official documentation](https://os.mbed.com/docs/mbed-os/latest/tools/developing-mbed-cli.html).
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=2.7.10,!=3.0.*,!=3.1.*,<4
+Description-Content-Type: text/markdown

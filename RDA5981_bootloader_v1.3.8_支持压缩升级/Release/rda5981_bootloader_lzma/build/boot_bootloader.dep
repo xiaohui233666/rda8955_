@@ -1,0 +1,172 @@
+Dependencies for Project 'boot', Target 'bootloader': (DO NOT MODIFY !)
+F (.\bootloader\bootloader.c)(0x599D38B4)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\bootloader.o --omf_browse .\build\bootloader.crf --depend .\build\bootloader.d)
+I (bootloader\bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (bootloader\hw/boot_cm.h)(0x599E37EE)
+I (bootloader\crc32.h)(0x5864BB44)
+I (bootloader\bootloader_ping_pong.h)(0x58B67AF8)
+I (bootloader\bootloader_copy.h)(0x58F5B0AC)
+I (bootloader\bootloader_triple_area.h)(0x58B67AF8)
+F (.\bootloader\crc32.c)(0x596DAB7A)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\crc32.o --omf_browse .\build\crc32.crf --depend .\build\crc32.d)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (bootloader\crc32.h)(0x5864BB44)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+F (.\bootloader\firmware.c)(0x58B67AF8)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\firmware.o --omf_browse .\build\firmware.crf --depend .\build\firmware.d)
+I (./bootloader/crc32.h)(0x5864BB44)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (bootloader\bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (bootloader\hw/boot_cm.h)(0x599E37EE)
+F (.\bootloader\image.c)(0x58B67AF8)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\image.o --omf_browse .\build\image.crf --depend .\build\image.d)
+I (bootloader\bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (bootloader\hw/boot_cm.h)(0x599E37EE)
+I (bootloader\crc32.h)(0x5864BB44)
+I (bootloader\flash.h)(0x5864BB44)
+F (.\bootloader\hw\rda5981\flash.c)(0x596DABCE)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\flash.o --omf_browse .\build\flash.crf --depend .\build\flash.d)
+I (./bootloader/bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (./bootloader/hw/boot_cm.h)(0x599E37EE)
+I (./bootloader/flash.h)(0x5864BB44)
+F (.\bootloader\hw\rda5981\flash_layout.c)(0x599D7FD2)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\flash_layout.o --omf_browse .\build\flash_layout.crf --depend .\build\flash_layout.d)
+I (./bootloader/bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (./bootloader/hw/boot_cm.h)(0x599E37EE)
+F (.\bootloader\bootloader_ping_pong.c)(0x596DAB5C)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\bootloader_ping_pong.o --omf_browse .\build\bootloader_ping_pong.crf --depend .\build\bootloader_ping_pong.d)
+I (bootloader\bootloader_ping_pong.h)(0x58B67AF8)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (bootloader\bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (bootloader\hw/boot_cm.h)(0x599E37EE)
+I (bootloader\crc32.h)(0x5864BB44)
+F (.\bootloader\bootloader_triple_area.c)(0x599E8884)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\bootloader_triple_area.o --omf_browse .\build\bootloader_triple_area.crf --depend .\build\bootloader_triple_area.d)
+I (bootloader\bootloader_triple_area.h)(0x58B67AF8)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (bootloader\bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (bootloader\hw/boot_cm.h)(0x599E37EE)
+I (bootloader\crc32.h)(0x5864BB44)
+I (bootloader\flash.h)(0x5864BB44)
+F (.\bootloader\bootloader_copy.c)(0x5A581C6A)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\bootloader_copy.o --omf_browse .\build\bootloader_copy.crf --depend .\build\bootloader_copy.d)
+I (bootloader\bootloader_copy.h)(0x58F5B0AC)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (bootloader\bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (bootloader\hw/boot_cm.h)(0x599E37EE)
+I (bootloader\crc32.h)(0x5864BB44)
+I (bootloader\flash.h)(0x5864BB44)
+F (.\main\main.c)(0x58B67AF8)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\main.o --omf_browse .\build\main.crf --depend .\build\main.d)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./bootloader/bootloader.h)(0x5A581C16)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (./bootloader/hw/rda5981/bootloader_config.h)(0x5B3B29C2)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+I (./bootloader/hw/boot_cm.h)(0x599E37EE)
+I (./bootloader/flash.h)(0x5864BB44)
+I (./bootloader/crc32.h)(0x5864BB44)
+F (.\main\retarget.c)(0x5A581DBC)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\retarget.o --omf_browse .\build\retarget.crf --depend .\build\retarget.d)
+I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (./hal/rda/drv_uart.h)(0x586F55AA)
+I (C:\Keil_v5\ARM\ARMCC\include\rt_sys.h)(0x599ECD2C)
+F (.\hal\rda\board.c)(0x599D3FFE)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\board.o --omf_browse .\build\board.crf --depend .\build\board.d)
+I (hal\rda\board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (hal\rda\drv_uart.h)(0x586F55AA)
+F (.\hal\rda\drv_uart.c)(0x5872FE6A)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\drv_uart.o --omf_browse .\build\drv_uart.crf --depend .\build\drv_uart.d)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (./hal/rda/drv_uart.h)(0x586F55AA)
+I (./hal/rda/rda_api.h)(0x599D6D84)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+F (.\hal\rda\rda_api.c)(0x59633658)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\rda_api.o --omf_browse .\build\rda_api.crf --depend .\build\rda_api.d)
+I (hal\rda\rda_api.h)(0x599D6D84)
+I (./hal/rda/board.h)(0x599D65EE)
+I (C:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x599ECD2A)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x599ECD2C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x599ECD2E)
+I (./hal/rda/device/rda5981/rda5981_bootrom_api.h)(0x5A581C98)
+F (.\hal\rda\device\rda5981\system_rda5981.c)(0x5872FCAE)(-c --cpu Cortex-M4 -D__MICROLIB --li -g -O3 --apcs=interwork --split_sections -I ./hal/rda -I ./bootloader -I ./bootloader/hw/rda5981 -I ./hal/rda/device/rda5981-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="525" -DARMCM4 -DUNO_81A_U04 -DOTA_LAMZ_COMPRESS_SUPPORT-o .\build\system_rda5981.o --omf_browse .\build\system_rda5981.crf --depend .\build\system_rda5981.d)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x599ECD2E)
+F (.\hal\rda\device\TOOLCHAIN_ARM_STD\startup_rda5981.s)(0x5A581DFA)(--cpu Cortex-M4 --li -g --apcs=interwork --pd "__MICROLIB SETA 1"-I.\RTE\_bootloader-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.3.0\Device\ARM\ARMCM4\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 525" --pd "ARMCM4 SETA 1"--list .\startup_rda5981.lst --xref -o .\build\startup_rda5981.o --depend .\build\startup_rda5981.d)
+F (.\lzma\lib\lzma.lib)(0x5B8FD73B)()
