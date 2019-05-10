@@ -5,6 +5,8 @@
 #include "rda5981_sniffer.h"
 #include "airkiss.h"
 #include "gpadckey.h"
+//#include "utest.h"
+//using namespace utest::v1;
 
 WiFiStackInterface wifi;
 
@@ -55,7 +57,6 @@ int from_ds = 0;
 int mgm_frame = 0;
 static void time_callback(void const *p)
 {
-    int i;
     do {
         cur_channel++;
 		printf("\r\ncur_channel:%d\r\n",cur_channel);
@@ -181,14 +182,53 @@ int my_smartconfig_handler(unsigned short data_len, void *data)
     return 0;
 }
 
+#define TCP_SERVER_PORT       80
+#define BUF_LEN               1024
+
+TCPSocket *client;
+typedef struct{
+	Thread *thread;
+	SocketAddress client_addr;
+	TCPSocket client;
+	char isuse;
+}mesh_tcp_socket_t;
+#define mesh_tcp_size 3
+mesh_tcp_socket_t mesh_tcp[mesh_tcp_size];
+TCPServer server;
+SocketAddress *client_addr;
+void tcp_deal_func(mesh_tcp_socket_t *mesh_tcp_sub);
+void test_thread(void)
+{
+	while(true)
+	{
+		printf("\r\n!!!!!!!!!!!!!!!!!!!!!test-thread!!!!!!!!!!!!!!!\r\n");
+		osDelay(2000);
+	}
+	
+}
 int main() {
-    int i;
+    int tmp_i;
     int ret;
     int airkiss_send_rsp = 0;
     rda5981_scan_result scan_result[30];
-
-    memset(my_scan_channel, 0, sizeof(my_scan_channel));
-
+	
+	Thread t2;
+	t2.start(test_thread);
+	memset(my_scan_channel, 0, sizeof(my_scan_channel));
+	for(unsigned int tmp_i=0;tmp_i<mesh_tcp_size;tmp_i++)
+	{
+		mesh_tcp[tmp_i].isuse=0;
+	}
+/*
+	ret = wifi.start_ap("RRDD-8889", NULL ,11);
+	rda5981_apsta_info *sta_list=(rda5981_apsta_info *)malloc(sizeof(rda5981_apsta_info)*100);
+	unsigned int num;
+	num=wifi.ap_join_info(sta_list,100);
+	printf("get_ip_address:%s\r\n",wifi.get_ip_address());
+	printf("get_ip_address_ap:%s ,get_dhcp_start_ap: %s\r\n",wifi.get_ip_address_ap(),wifi.get_dhcp_start_ap());
+	printf("					joined sta num: %d\r\n",num);
+*/
+/*
     ret = wifi.scan(NULL, 0);//necessary
     ret = wifi.scan_result(scan_result, 30);
     printf("scan result:%d\n", ret);
@@ -199,7 +239,7 @@ int main() {
         }
     }
 
-    rda5991h_smartlink_irq_init();
+    //rda5991h_smartlink_irq_init();
 
     ret = rda5981_flash_read_sta_data(ssid, passwd);
     if (0 && (ret==0 && strlen(ssid))) {//get ssid from flash
@@ -217,21 +257,110 @@ int main() {
         airkiss_send_rsp = 1;
         wait_us(500 * 1000);
     }
-
-    ret = wifi.connect(ssid, passwd, NULL, NSAPI_SECURITY_NONE);
+*/
+    //ret = wifi.connect(ssid, passwd, NULL, NSAPI_SECURITY_NONE);
+	ret = wifi.connect("Bee-WiFi(2.4G)", "Beephone", NULL, NSAPI_SECURITY_NONE);
     if (ret==0) {
         printf("connect to %s success, ip %s\r\n", ssid, wifi.get_ip_address());
     } else {
         printf("connect to %s fail\r\n", ssid);
     }
-
+/*
     if (airkiss_send_rsp) {
         rda5981_flash_write_sta_data(ssid, passwd);
         send_rsp_to_apk(random);
+		#ifdef LWIP_DEBUG
+			printf("\r\n------------------LWIP_DEBUG-enable--------------\r\n");
+		#endif
     }
+*/
+	server.open(&wifi);
+    server.bind(wifi.get_ip_address(), TCP_SERVER_PORT);
 
+    server.listen(5);
+    printf("Server Listening\n");
+	unsigned int i=0,tmp_find_state=0;
     while (true) {
+        printf("\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^Wait for new connection...^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n");
+		
+		//TCPSocket temp_client;
+		//SocketAddress tmp_client_addr;
+		i=0;tmp_find_state=0;
+		printf("mesh_tcp addr %p\r\n",&mesh_tcp);
+		
+		for(;i<mesh_tcp_size;i++)
+		{
+			if(mesh_tcp[i].isuse==0)
+			{
+				mesh_tcp[i].isuse=1;
+				client=&(mesh_tcp[i].client);
+				client_addr = &(mesh_tcp[i].client_addr);
+				printf("mesh_tcp[%d].client %p\r\n",i,&(mesh_tcp[i].client));
+				mesh_tcp[tmp_i].thread = new Thread(&mesh_tcp[tmp_i],tcp_deal_func, osPriorityNormal, 512);
+				tmp_find_state = 1;
+				break;
+			}
+		}
+		if(tmp_find_state == 0)
+		{
+			printf("server busy now ,please wait and retry!\r\n");
+			osDelay(200);
+		}else{
+			//client = &temp_client;
+			//client_addr = &tmp_client_addr;
+			//TCPSocket *client;SocketAddress *client_addr;
+			//client = (TCPSocket *)malloc(sizeof(TCPSocket));
+			//client_addr = (SocketAddress *)malloc(sizeof(SocketAddress));
+			server.accept(client, client_addr);
+			printf("Connection from: %s:%d\r\n", (*client_addr).get_ip_address(), (*client_addr).get_port());
+			printf("\r\n------------------------new thread--------------\r\n");
+			mesh_tcp[i].thread->join();
+			printf("\r\n**************************test*****************************\r\n");
+			//while(true){
+			//	osDelay(20000);
+			//}
+			//t1.start(tcp_deal_func);
+			//tcp_deal_func();
+			//tcp_deal_func((void *)client);
+			//thread.start();
+			//wait(5);
+			//thread.join();
+		}
+
+        
     }
+}
+
+unsigned char send_content[] = "Hello World!\n";
+void tcp_deal_func(mesh_tcp_socket_t *mesh_tcp_sub)
+{
+	printf("Enter tcp_deal_func\r\n");
+	TCPSocket *cli = &(mesh_tcp_sub->client);
+	SocketAddress *cli_addr = &(mesh_tcp_sub->client_addr);
+	char *buffer;
+	printf("tcp_deal_func Connection from: %s:%d\r\n", (*cli_addr).get_ip_address(), (*cli_addr).get_port());
+	buffer = (char *)malloc(BUF_LEN);
+	//char buffer[BUF_LEN+1];
+	printf("Enter tcp_deal_func-\r\n");
+	while(true) {
+		printf("rev\r\n");
+		int n = (*cli).recv(buffer, BUF_LEN);
+		printf("Recieved Data: %d\r\n%.*s\r\n", n, n, buffer);
+		if(n <= 0)
+			break;
+		
+		//(*cli).send(send_content, sizeof(send_content) - 1);
+	}
+	printf("close\r\n");
+	mesh_tcp_sub->client.close();
+	printf("relase\r\n");
+	mesh_tcp_sub->isuse=0;
+	//must free cli and cli addr before return
+	//free(cli);
+	printf("free buff\r\n");
+	free(buffer);
+	printf("tcp_deal_func end\r\n");
+	delete mesh_tcp_sub->thread;
 }
 
 

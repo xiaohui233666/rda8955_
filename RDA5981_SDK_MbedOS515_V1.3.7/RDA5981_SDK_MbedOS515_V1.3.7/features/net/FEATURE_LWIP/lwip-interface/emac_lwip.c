@@ -35,7 +35,7 @@ static void emac_lwip_input(void *data, emac_stack_t *buf)
 {
     struct pbuf *p = (struct pbuf *)buf;
     struct netif *netif = (struct netif *)data;
-
+	printf("\r\n-------------------------------------------------------emac_lwip_input-%p-------------------------------\r\n",netif);
     /* pass all packets to ethernet_input, which decides what packets it supports */
     if (netif->input(p, netif) != ERR_OK) {
         LWIP_DEBUGF(NETIF_DEBUG, ("Emac LWIP: IP input error\n"));

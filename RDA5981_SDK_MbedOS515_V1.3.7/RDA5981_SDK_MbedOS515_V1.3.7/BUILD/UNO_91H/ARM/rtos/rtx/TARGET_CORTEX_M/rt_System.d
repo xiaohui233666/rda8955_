@@ -1,0 +1,15 @@
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_System.c
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: .\BUILD\UNO_91H\ARM\mbed_config.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_TypeDef.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\RTX_Config.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Task.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\cmsis_os.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_System.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Event.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_List.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Mailbox.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Semaphore.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Time.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Timer.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Robin.h
+.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_System.o: ./rtos\rtx\TARGET_CORTEX_M\rt_HAL_CM.h

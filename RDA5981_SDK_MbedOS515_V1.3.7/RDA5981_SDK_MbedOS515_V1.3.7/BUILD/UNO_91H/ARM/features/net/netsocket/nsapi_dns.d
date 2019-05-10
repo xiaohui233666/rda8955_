@@ -1,0 +1,14 @@
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features\net\netsocket\nsapi_dns.cpp
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: .\BUILD\UNO_91H\ARM\mbed_config.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features\net\netsocket\nsapi_dns.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features\net\netsocket\nsapi_types.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features/net/netsocket/NetworkStack.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features/net/netsocket/SocketAddress.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./hal/api/toolchain.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features/net/netsocket/NetworkInterface.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features/net/netsocket/UDPSocket.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./features/net/netsocket/Socket.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./rtos/rtos/Mutex.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./rtos/rtx/TARGET_CORTEX_M/cmsis_os.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./hal/api/Callback.h
+.\BUILD\UNO_91H\ARM\features\net\netsocket\nsapi_dns.o: ./rtos/rtos/Semaphore.h
