@@ -1,9 +1,0 @@
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features\mbedtls\src\md_wrap.c
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: .\BUILD\UNO_91H\ARM\mbed_config.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/config.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/check_config.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/md_internal.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/md.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/sha256.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/sha512.h
-.\BUILD\UNO_91H\ARM\features\mbedtls\src\md_wrap.o: ./features/mbedtls/inc/mbedtls/platform.h

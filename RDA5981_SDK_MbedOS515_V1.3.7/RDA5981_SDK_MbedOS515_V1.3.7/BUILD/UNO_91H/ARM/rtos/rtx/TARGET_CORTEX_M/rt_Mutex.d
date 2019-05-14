@@ -1,9 +1,0 @@
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Mutex.c
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: .\BUILD\UNO_91H\ARM\mbed_config.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\rt_TypeDef.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\RTX_Config.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\rt_List.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Task.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\cmsis_os.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\rt_Mutex.h
-.\BUILD\UNO_91H\ARM\rtos\rtx\TARGET_CORTEX_M\rt_Mutex.o: ./rtos\rtx\TARGET_CORTEX_M\rt_HAL_CM.h

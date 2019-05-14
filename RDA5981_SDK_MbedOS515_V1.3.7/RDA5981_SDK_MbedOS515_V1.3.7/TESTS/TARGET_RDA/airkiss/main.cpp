@@ -187,22 +187,29 @@ int my_smartconfig_handler(unsigned short data_len, void *data)
 
 TCPSocket *client;
 typedef struct{
+	char * buffer;
 	Thread *thread;
 	SocketAddress client_addr;
 	TCPSocket client;
 	char isuse;
 }mesh_tcp_socket_t;
-#define mesh_tcp_size 3
+#define mesh_tcp_size 10
 mesh_tcp_socket_t mesh_tcp[mesh_tcp_size];
 TCPServer server;
 SocketAddress *client_addr;
+
+Thread t2;Thread t3;
+
 void tcp_deal_func(mesh_tcp_socket_t *mesh_tcp_sub);
 void test_thread(void)
 {
-	while(true)
+	unsigned int ti=0;
+	while(1 || ti++ <= 10)
 	{
-		printf("\r\n!!!!!!!!!!!!!!!!!!!!!test-thread!!!!!!!!!!!!!!!\r\n");
-		osDelay(2000);
+		printf("\r\n!!!!!!!!!!!!!!!!!!!!!test-thread %d!!!!!!!!!!!!!!!\r\n",ti);
+		printf("stack_size %d free_stack %d\r\n", t2.stack_size(),t2.free_stack());
+		//mesh_tcp_sub->thread->yield();//
+		osDelay(200);
 	}
 	
 }
@@ -212,8 +219,8 @@ int main() {
     int airkiss_send_rsp = 0;
     rda5981_scan_result scan_result[30];
 	
-	Thread t2;
 	t2.start(test_thread);
+	t3.start(test_thread);
 	memset(my_scan_channel, 0, sizeof(my_scan_channel));
 	for(unsigned int tmp_i=0;tmp_i<mesh_tcp_size;tmp_i++)
 	{
@@ -277,7 +284,7 @@ int main() {
 	server.open(&wifi);
     server.bind(wifi.get_ip_address(), TCP_SERVER_PORT);
 
-    server.listen(5);
+    server.listen(30);
     printf("Server Listening\n");
 	unsigned int i=0,tmp_find_state=0;
     while (true) {
@@ -290,13 +297,16 @@ int main() {
 		
 		for(;i<mesh_tcp_size;i++)
 		{
+			printf("mesh_tcp[%d].isuse %d mesh_tcp[%d].client %p\r\n",i,mesh_tcp[i].isuse,i,&(mesh_tcp[i].client));
 			if(mesh_tcp[i].isuse==0)
 			{
 				mesh_tcp[i].isuse=1;
 				client=&(mesh_tcp[i].client);
 				client_addr = &(mesh_tcp[i].client_addr);
 				printf("mesh_tcp[%d].client %p\r\n",i,&(mesh_tcp[i].client));
-				mesh_tcp[tmp_i].thread = new Thread(&mesh_tcp[tmp_i],tcp_deal_func, osPriorityNormal, 512);
+				mesh_tcp[tmp_i].buffer = (char *)malloc(BUF_LEN);
+				//mesh_tcp[tmp_i].thread = new Thread(&mesh_tcp[tmp_i],tcp_deal_func, osPriorityNormal, 2048);
+				mesh_tcp[tmp_i].thread = new Thread( osPriorityNormal, 512);
 				tmp_find_state = 1;
 				break;
 			}
@@ -314,7 +324,10 @@ int main() {
 			server.accept(client, client_addr);
 			printf("Connection from: %s:%d\r\n", (*client_addr).get_ip_address(), (*client_addr).get_port());
 			printf("\r\n------------------------new thread--------------\r\n");
-			mesh_tcp[i].thread->join();
+			//mesh_tcp[i].thread->join();
+			//mesh_tcp[i].thread->start(callback(tcp_deal_func,&mesh_tcp[tmp_i]));
+			mesh_tcp[i].thread->start(&mesh_tcp[tmp_i],tcp_deal_func);
+			//tcp_deal_func(&mesh_tcp[tmp_i]);
 			printf("\r\n**************************test*****************************\r\n");
 			//while(true){
 			//	osDelay(20000);
@@ -337,9 +350,9 @@ void tcp_deal_func(mesh_tcp_socket_t *mesh_tcp_sub)
 	printf("Enter tcp_deal_func\r\n");
 	TCPSocket *cli = &(mesh_tcp_sub->client);
 	SocketAddress *cli_addr = &(mesh_tcp_sub->client_addr);
-	char *buffer;
+	char *buffer=mesh_tcp_sub->buffer;
 	printf("tcp_deal_func Connection from: %s:%d\r\n", (*cli_addr).get_ip_address(), (*cli_addr).get_port());
-	buffer = (char *)malloc(BUF_LEN);
+	
 	//char buffer[BUF_LEN+1];
 	printf("Enter tcp_deal_func-\r\n");
 	while(true) {
@@ -348,19 +361,23 @@ void tcp_deal_func(mesh_tcp_socket_t *mesh_tcp_sub)
 		printf("Recieved Data: %d\r\n%.*s\r\n", n, n, buffer);
 		if(n <= 0)
 			break;
-		
-		//(*cli).send(send_content, sizeof(send_content) - 1);
+		printf("stack_size %d free_stack %d\r\n", mesh_tcp_sub->thread->stack_size(),mesh_tcp_sub->thread->free_stack());
+				
+		//mesh_tcp_sub->thread->yield();
+		//(*cli).send("test---------", sizeof("test---------"));
 	}
 	printf("close\r\n");
-	mesh_tcp_sub->client.close();
+	(*cli).close();
+	printf("delete thread\r\n");
+	//delete &(mesh_tcp_sub->thread);
 	printf("relase\r\n");
-	mesh_tcp_sub->isuse=0;
+	printf("test mesh_tcp_sub->isuse %d\r\n",mesh_tcp_sub->isuse);
+	*(&(mesh_tcp_sub->isuse))=0;
 	//must free cli and cli addr before return
 	//free(cli);
 	printf("free buff\r\n");
 	free(buffer);
 	printf("tcp_deal_func end\r\n");
-	delete mesh_tcp_sub->thread;
 }
 
 
