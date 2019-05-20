@@ -8,6 +8,17 @@
 
 WiFiStackInterface airkiss_wifi;
 
+void test_wifi(void){
+    int ret;
+//ret = wifi.connect(ssid, passwd, NULL, NSAPI_SECURITY_NONE);
+	ret = airkiss_wifi.connect("Bee-WiFi(2.4G)", "Beephone", NULL, NSAPI_SECURITY_NONE);
+    if (ret==0) {
+        printf("connect to %s success, ip %s\r\n", "Bee-WiFi(2.4G)", airkiss_wifi.get_ip_address());
+    } else {
+        printf("connect to %s fail\r\n", "Bee-WiFi(2.4G)");
+    }
+}
+
 char ssid[32];
 char passwd[64];
 uint8_t random;
