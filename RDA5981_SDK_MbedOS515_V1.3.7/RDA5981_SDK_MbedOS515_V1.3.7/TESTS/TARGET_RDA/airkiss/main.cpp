@@ -4,6 +4,7 @@
 #include "WiFiStackInterface.h"
 #include "greentea-client/test_env.h"
 #include "cmsis_os.h"
+#include "rda_sys_wrapper.h"
 
 extern void test_wifi(void);
 
@@ -22,21 +23,26 @@ MemoryPool<message_t, QUEUE_SIZE> mpool;
 Queue<message_t, QUEUE_SIZE> queue;
 #include "Queue.h"
 
+struct tcp_pcb *client_pcb;
+
 WiFiStackInterface wifi;
 
 #define TCP_SERVER_PORT       80
-#define BUF_LEN               1024
+
+#define mesh_tcp_size 3
+#define BUF_LEN               100
 
 TCPSocket *client;
 typedef struct{
 	char tmp_id;
-	char * buffer;
-	Thread *thread;
+	char buffer[BUF_LEN+1];
+	//Thread *thread;
+	void * thread;
 	SocketAddress client_addr;
 	TCPSocket client;
 	char isuse;
 }mesh_tcp_socket_t;
-#define mesh_tcp_size 30
+
 mesh_tcp_socket_t mesh_tcp[mesh_tcp_size];
 TCPServer server;
 SocketAddress *client_addr;
@@ -46,8 +52,9 @@ SocketAddress *client_addr;
 // Queue test_queue();
 Thread t2;Thread t3;Thread tqtw;Thread tqtr;
 
-//void tcp_deal_func(void const *arg);
-void tcp_deal_func(mesh_tcp_socket_t *arg);
+void tcp_deal_func(void *arg);
+// void tcp_deal_func(void const *arg);
+// void tcp_deal_func(mesh_tcp_socket_t *arg);
 void test_thread(void)
 {
 	unsigned int ti=0;
@@ -145,9 +152,9 @@ int main() {
 				client=&(mesh_tcp[i].client);
 				client_addr = &(mesh_tcp[i].client_addr);
 				printf("mesh_tcp[%d].client %p\r\n",i,&(mesh_tcp[i].client));
-				mesh_tcp[i].buffer = (char *)malloc(BUF_LEN);
+				//mesh_tcp[i].buffer = (char *)malloc(BUF_LEN);
 				//mesh_tcp[i].thread = new Thread((&mesh_tcp[i],tcp_deal_func, osPriorityNormal, 2048);
-				mesh_tcp[i].thread = new Thread(osPriorityNormal, 512);
+				//mesh_tcp[i].thread = new Thread(osPriorityNormal, 512);
 				tmp_find_state = 1;
 				break;
 			}
@@ -164,13 +171,30 @@ int main() {
 			//client = (TCPSocket *)malloc(sizeof(TCPSocket));
 			//client_addr = (SocketAddress *)malloc(sizeof(SocketAddress));
 			server.accept(client, client_addr);
+			
 			printf("Connection from: %s:%d\r\n", (*client_addr).get_ip_address(), (*client_addr).get_port());
 			printf("\r\n------------------------new thread--------------\r\n");
 			//mesh_tcp[i].thread->join();
 			//mesh_tcp[i].thread->start();
 			//mesh_tcp[i].thread->start(callback(tcp_deal_func,&mesh_tcp[i]));
-			mesh_tcp[i].thread->start(&mesh_tcp[i],tcp_deal_func);
-			void *stack=malloc(2048);
+
+			// unsigned char send_content[] = "Hello World!\n";
+			// while(true) {
+			// 	printf("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \r\n");
+			// 	int n = (*client).recv((void *)mesh_tcp[i].buffer, BUF_LEN);
+			// 	if(n <= 0)
+			// 		break;
+			// 	printf("Recieved Data: %d\r\n%.*s\r\n", n, mesh_tcp[i].buffer);
+			// 	//(*client).send(send_content, sizeof(send_content) - 1);
+			// }
+			// (*client).close();
+
+			//mesh_tcp[i].thread->start(&mesh_tcp[i],tcp_deal_func);
+
+			//(*client).send("Hello World!\n", sizeof("Hello World!\n") - 1);
+			mesh_tcp[i].thread = rda_thread_new(NULL, tcp_deal_func, (void *)&mesh_tcp[i], 2048,osPriorityLow);
+
+			//void *stack=malloc(2048);
 			//rt_tsk_create((FUNCP)(tcp_deal_func), (U32)2048, (void *)stack, (void *)&mesh_tcp[tmp_i]);
 
 			//static osThreadDef(tcp_deal_func, osPriorityNormal, 4*1024);
@@ -195,11 +219,13 @@ int main() {
 }
 
 unsigned char send_content[] = "Hello World!\n";
-void tcp_deal_func(mesh_tcp_socket_t *arg)
+// void tcp_deal_func(mesh_tcp_socket_t *arg) 
+void tcp_deal_func(void *arg)
 //void tcp_deal_func(void const *arg)
 {
 	mesh_tcp_socket_t *mesh_tcp_sub = (mesh_tcp_socket_t *)arg;
 	printf("Enter tcp_deal_func\r\n");
+	
 	//TCPSocket *cli = &(mesh_tcp_sub->client);
 	//SocketAddress *cli_addr = &(mesh_tcp_sub->client_addr);
 	//char *buffer=mesh_tcp_sub->buffer;
@@ -208,16 +234,27 @@ void tcp_deal_func(mesh_tcp_socket_t *arg)
 	//char buffer[BUF_LEN+1];
 	printf("Enter tcp_deal_func-\r\n");
 	while(true) {
-		printf("client %d",mesh_tcp_sub->tmp_id);
+		printf("client %d \r\n",mesh_tcp_sub->tmp_id);
+		printf("mesh_tcp_sub->thread %p %d\r\n",mesh_tcp_sub->thread,mesh_tcp_sub->thread);
 		//printf("rev mesh_tcp_sub->client %p\r\n",&(mesh_tcp_sub->client));
-		int n = (*(&(mesh_tcp_sub->client))).recv(mesh_tcp_sub->buffer, BUF_LEN);
-		printf("Recieved Data: %d\r\n%.*s\r\n", n, n, mesh_tcp_sub->buffer);
-		if(n <= 0)
-			break;
-		//printf("mesh_tcp_sub->client %p stack_size %d free_stack %d\r\n",mesh_tcp_sub->client, mesh_tcp_sub->thread->stack_size(),mesh_tcp_sub->thread->free_stack());
+		int n = (*(&(mesh_tcp_sub->client))).recv((void *)mesh_tcp_sub->buffer, BUF_LEN);
+		printf("client %d Recieved Data: %d\r\n%.*s\r\n",mesh_tcp_sub->tmp_id, n, n, mesh_tcp_sub->buffer);
+		//printf("Recieved Data: %d\r\n", n);
+		//(*(&(mesh_tcp_sub->client))).send("Hello World!\n", sizeof("Hello World!\n") - 1);
+		if(n <= 0){
+			printf("client %d close\r\n");
+			//free(mesh_tcp_sub->buffer);
+			//(*(&(mesh_tcp_sub->client))).close();
+			printf("client %d close end\r\n");
+			mesh_tcp_sub->isuse=0;
+			printf("client %d mesh_tcp_sub->isuse=0;\r\n");
+			return;//break;
+		}
+	
+		//printf("mesh_tcp_sub->client %d stack_size %d free_stack %d\r\n",mesh_tcp_sub->tmp_id, mesh_tcp_sub->thread->stack_size(),mesh_tcp_sub->thread->free_stack());
 		//osDelay(200);
-		Thread::wait(200);
-		//mesh_tcp_sub->thread->yield();
+		//Thread::wait(2000);
+		//Thread::yield();
 		//(*cli).send("test---------", sizeof("test---------"));
 	}
 	printf("close\r\n");
@@ -232,7 +269,7 @@ void tcp_deal_func(mesh_tcp_socket_t *arg)
 	free(mesh_tcp_sub->buffer);
 
 	printf("test mesh_tcp_sub->isuse %d\r\n",mesh_tcp_sub->isuse);
-	mesh_tcp_sub->isuse=0;
+	
 	printf("test mesh_tcp_sub->isuse end %d\r\n",mesh_tcp_sub->isuse);
 
 	printf("tcp_deal_func end\r\n");
