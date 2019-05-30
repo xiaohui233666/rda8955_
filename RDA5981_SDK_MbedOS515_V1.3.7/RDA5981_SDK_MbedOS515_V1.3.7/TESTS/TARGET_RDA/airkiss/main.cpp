@@ -5,7 +5,8 @@
 #include "greentea-client/test_env.h"
 #include "cmsis_os.h"
 #include "rda_sys_wrapper.h"
-
+#include "rda5991h_wland.h"
+#include "lwip_stack.h"
 extern void test_wifi(void);
 
 #if defined(MBED_RTOS_SINGLE_THREAD)
@@ -13,7 +14,7 @@ extern void test_wifi(void);
 #endif
 
 typedef struct {
-    uint32_t counter;   /* A counter value               */
+    uint32_t find_node_state;   /* A find_node_state value               */
 } message_t;
 
 #define QUEUE_SIZE       16
@@ -32,6 +33,7 @@ WiFiStackInterface wifi;
 #define mesh_tcp_size 3
 #define BUF_LEN               100
 
+rtos::Mutex mesh_socket_lock;
 TCPSocket *client;
 typedef struct{
 	char tmp_id;
@@ -44,13 +46,15 @@ typedef struct{
 }mesh_tcp_socket_t;
 
 mesh_tcp_socket_t mesh_tcp[mesh_tcp_size];
-TCPServer server;
+TCPServer *server;
 SocketAddress *client_addr;
 
 
 
-// Queue test_queue();
-Thread t2;Thread t3;Thread tqtw;Thread tqtr;
+// test machine run status
+Thread t2;Thread t3;
+//test queue thread
+Thread tqtw;Thread tqtr;
 
 void tcp_deal_func(void *arg);
 // void tcp_deal_func(void const *arg);
@@ -70,53 +74,128 @@ void test_thread(void)
 	}
 	
 }
-void test_queue_read_thread(void)
-{
-	unsigned int ti=0;
-	while(1 || ti++ <= 10)
-	{
-		ti++;
-		printf("\r\n##################test_read_queue_thread###################\r\n");
-		printf("stack_size %d free_stack %d\r\n", t2.stack_size(),t2.free_stack());
-		//mesh_tcp_sub->thread->yield();//
-		osEvent evt = queue.get();
-        if (evt.status == osEventMessage) {
-			message_t *message = (message_t*)evt.value.p;
-			printf("\r\n##################test_read_queue_thread %d ###################\r\n",message->counter);
-			mpool.free(message);
+// void test_queue_read_thread(void)
+// {
+// 	unsigned int ti=0;
+// 	while(1 || ti++ <= 10)
+// 	{
+// 		ti++;
+// 		printf("\r\n##################test_read_queue_thread###################\r\n");
+// 		printf("stack_size %d free_stack %d\r\n", t2.stack_size(),t2.free_stack());
+// 		//mesh_tcp_sub->thread->yield();//
+// 		osEvent evt = queue.get();
+//         if (evt.status == osEventMessage) {
+// 			message_t *message = (message_t*)evt.value.p;
+// 			printf("\r\n##################test_read_queue_thread %d ###################\r\n",message->counter);
+// 			mpool.free(message);
+// 		}
+// 		osDelay(3000);
+// 		if(ti == 30)
+// 			ti = 0;
+// 	}
+	
+// }
+
+void find_mesh_dev(void * arg){
+	int ret;
+	const char *SSID = NULL;
+	rda5981_scan_result *bss_list = NULL;
+    int scan_res;
+	printf("Start wifi_scan...\r\n");
+	//mbed_lwip_init(NULL);
+	mesh_socket_lock.lock();
+    scan_res = wifi.scan(NULL, 0);
+	printf("Start wifi_scan end...\r\n");
+    bss_list = (rda5981_scan_result *)malloc(scan_res * sizeof(rda5981_scan_result));
+    memset(bss_list, 0, scan_res * sizeof(rda5981_scan_result));
+    if (bss_list == NULL) {
+        printf("malloc buf fail\r\n");
+        return ;
+    }
+    ret = wifi.scan_result(bss_list, scan_res);//rda5981_get_scan_result(bss_list, scan_res);
+	rda5981_scan_result *tmp_rda5981_scan_result=bss_list;
+	for(int tmp_ret=ret;tmp_ret>0;tmp_ret--){
+		printf("%d:%s\r\n",tmp_ret,(unsigned char *)((*(tmp_rda5981_scan_result++)).SSID));
+	}
+    printf("##########scan return :%d\n", ret);
+    free(bss_list);
+	mesh_socket_lock.unlock();
+	//Thread::wait(500);
+}
+
+// void test_queue_write_thread(void)
+// {
+// 	unsigned int ti=0;
+// 	while(1 || ti++ <= 10)
+// 	{
+// 		ti++;
+// 		printf("\r\n##################test_write_queue_thread %d###################\r\n",ti);
+// 		printf("stack_size %d free_stack %d\r\n", t2.stack_size(),t2.free_stack());
+// 		//mesh_tcp_sub->thread->yield();//
+// 		message_t *message = mpool.alloc();
+//         message->counter = ti;
+// 		queue.put(message);
+//         Thread::wait(QUEUE_PUT_DELAY);
+// 		osDelay(1000);
+// 		if(ti == 30)
+// 			ti = 0;
+// 	}
+	
+// }
+
+TCPSocket mesh_tcp_client;
+void test_mesh_tcp_client(void * arg){
+	//connect last node,find the online node
+	//while(true){
+		find_mesh_dev(0);
+		mesh_socket_lock.lock();
+		if(server != NULL){
+			delete server;
 		}
-		osDelay(3000);
-		if(ti == 30)
-			ti = 0;
-	}
-	
+		server = new TCPServer();
+		(*server).open(&wifi);
+		printf("wifi.get_ip_address() %s\r\n", wifi.get_ip_address());
+		(*server).bind(wifi.get_ip_address(), TCP_SERVER_PORT);
+printf("(*server).bind(wifi.get_ip_address(), TCP_SERVER_PORT)\r\n");
+		(*server).listen(30);
+printf("(*server).listen(30)\r\n");
+		mesh_socket_lock.unlock();
+		int ret = wifi.connect("Bee-WiFi(2.4G)", "Beephone", NULL, NSAPI_SECURITY_NONE);
+		if (ret==0) {
+			// message_t *message = mpool.alloc();
+			// message->counter = 1;
+			// queue.put(message);
+			// Thread::wait(QUEUE_PUT_DELAY);
+			printf("connect last node,find the online node [%s]\r\n",wifi.get_ip_address());
+			printf("connect success, ip %s\r\n", wifi.get_ip_address());
+		} else {
+			printf("connect fail\r\n");
+		}
+		mesh_tcp_client.open(&wifi);
+		if(mesh_tcp_client.connect("192.168.60.225",233) == 0){
+			
+			printf("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[connect server success]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\r\n");
+			osDelay(100);
+			while(true){
+
+			}
+			mesh_tcp_client.close();
+		}else{
+			printf("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[connect server faile]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\r\n");
+		}
+		wifi.disconnect();
+		osDelay(1000);//while(true){};
+	//}
 }
-void test_queue_write_thread(void)
-{
-	unsigned int ti=0;
-	while(1 || ti++ <= 10)
-	{
-		ti++;
-		printf("\r\n##################test_write_queue_thread %d###################\r\n",ti);
-		printf("stack_size %d free_stack %d\r\n", t2.stack_size(),t2.free_stack());
-		//mesh_tcp_sub->thread->yield();//
-		message_t *message = mpool.alloc();
-        message->counter = ti;
-		queue.put(message);
-        Thread::wait(QUEUE_PUT_DELAY);
-		osDelay(1000);
-		if(ti == 30)
-			ti = 0;
-	}
-	
-}
+
 int main() {
     int tmp_i;
     int ret;
-    rda5981_scan_result scan_result[30];
-	
-	// t2.start(test_thread);
-	// t3.start(test_thread);
+	test_mesh_tcp_client(0);//find_mesh_dev(0);
+	//rda_thread_new(NULL, test_mesh_tcp_client, (void *)0, 2048,osPriorityLow);
+	//osDelay(1000);
+	t2.start(test_thread);
+	t3.start(test_thread);
 	
 
 	// tqtw.start(test_queue_write_thread);
@@ -126,12 +205,12 @@ int main() {
 	{
 		mesh_tcp[tmp_i].isuse=0;
 	}
-    test_wifi();
-
-	server.open(&wifi);
-    server.bind(wifi.get_ip_address(), TCP_SERVER_PORT);
-
-    server.listen(30);
+    //test_wifi();
+	mesh_socket_lock.lock();
+	while(server == NULL){
+		osDelay(1000);
+	}
+	mesh_socket_lock.unlock();
     printf("Server Listening\n");
 	unsigned int i=0,tmp_find_state=0;
     while (true) {
@@ -170,8 +249,9 @@ int main() {
 			//TCPSocket *client;SocketAddress *client_addr;
 			//client = (TCPSocket *)malloc(sizeof(TCPSocket));
 			//client_addr = (SocketAddress *)malloc(sizeof(SocketAddress));
-			server.accept(client, client_addr);
-			
+			mesh_socket_lock.lock();
+			(*server).accept(client, client_addr);
+			mesh_socket_lock.unlock();
 			printf("Connection from: %s:%d\r\n", (*client_addr).get_ip_address(), (*client_addr).get_port());
 			printf("\r\n------------------------new thread--------------\r\n");
 			//mesh_tcp[i].thread->join();
@@ -192,7 +272,7 @@ int main() {
 			//mesh_tcp[i].thread->start(&mesh_tcp[i],tcp_deal_func);
 
 			//(*client).send("Hello World!\n", sizeof("Hello World!\n") - 1);
-			mesh_tcp[i].thread = rda_thread_new(NULL, tcp_deal_func, (void *)&mesh_tcp[i], 2048,osPriorityLow);
+			mesh_tcp[i].thread = rda_thread_new(NULL, tcp_deal_func, (void *)&mesh_tcp[i], 2048,osPriorityNormal);
 
 			//void *stack=malloc(2048);
 			//rt_tsk_create((FUNCP)(tcp_deal_func), (U32)2048, (void *)stack, (void *)&mesh_tcp[tmp_i]);
@@ -217,7 +297,7 @@ int main() {
         
     }
 }
-
+//delete &server can close all the client socket,try delete the server and renew the server obj , blind the port again , listen the port again ,and let the node connect.
 unsigned char send_content[] = "Hello World!\n";
 // void tcp_deal_func(mesh_tcp_socket_t *arg) 
 void tcp_deal_func(void *arg)
@@ -234,23 +314,24 @@ void tcp_deal_func(void *arg)
 	//char buffer[BUF_LEN+1];
 	printf("Enter tcp_deal_func-\r\n");
 	while(true) {
+		mesh_socket_lock.lock();
 		printf("client %d \r\n",mesh_tcp_sub->tmp_id);
 		printf("mesh_tcp_sub->thread %p %d\r\n",mesh_tcp_sub->thread,mesh_tcp_sub->thread);
 		//printf("rev mesh_tcp_sub->client %p\r\n",&(mesh_tcp_sub->client));
 		int n = (*(&(mesh_tcp_sub->client))).recv((void *)mesh_tcp_sub->buffer, BUF_LEN);
 		printf("client %d Recieved Data: %d\r\n%.*s\r\n",mesh_tcp_sub->tmp_id, n, n, mesh_tcp_sub->buffer);
 		//printf("Recieved Data: %d\r\n", n);
-		//(*(&(mesh_tcp_sub->client))).send("Hello World!\n", sizeof("Hello World!\n") - 1);
+		(*(&(mesh_tcp_sub->client))).send("Hello World!\n", sizeof("Hello World!\n") - 1);
 		if(n <= 0){
 			printf("client %d close\r\n");
 			//free(mesh_tcp_sub->buffer);
-			//(*(&(mesh_tcp_sub->client))).close();
+			(*(&(mesh_tcp_sub->client))).close();
 			printf("client %d close end\r\n");
 			mesh_tcp_sub->isuse=0;
 			printf("client %d mesh_tcp_sub->isuse=0;\r\n");
 			return;//break;
 		}
-	
+		mesh_socket_lock.unlock();
 		//printf("mesh_tcp_sub->client %d stack_size %d free_stack %d\r\n",mesh_tcp_sub->tmp_id, mesh_tcp_sub->thread->stack_size(),mesh_tcp_sub->thread->free_stack());
 		//osDelay(200);
 		//Thread::wait(2000);
@@ -258,7 +339,7 @@ void tcp_deal_func(void *arg)
 		//(*cli).send("test---------", sizeof("test---------"));
 	}
 	printf("close\r\n");
-	(*(&(mesh_tcp_sub->client))).close();
+	//(*(&(mesh_tcp_sub->client))).close();
 	printf("delete thread\r\n");
 	//delete &(mesh_tcp_sub->thread);
 	printf("relase\r\n");
