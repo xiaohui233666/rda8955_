@@ -7,6 +7,11 @@
 #include "rda_sys_wrapper.h"
 #include "rda5991h_wland.h"
 #include "lwip_stack.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "cJSON.h"
 extern void test_wifi(void);
 
 #if defined(MBED_RTOS_SINGLE_THREAD)
@@ -197,6 +202,20 @@ int main() {
 	t2.start(test_thread);
 	t3.start(test_thread);
 	
+	cJSON *root = NULL;
+	char *out = NULL;
+	root = cJSON_CreateObject();
+	cJSON_AddItemToObject(root, "name", cJSON_CreateString("Jack (\"Bee\") Nimble"));
+	out=cJSON_Print(root);
+	printf("json_str:%s\r\n",out);
+	free(out);
+	cJSON_Delete(root);
+
+	root = cJSON_Parse("{\"name\":	\"testname\"}");
+	out = cJSON_Print(root);
+	printf("json_str_analyze:%s\r\n",out);
+	free(out);
+	cJSON_Delete(root);
 
 	// tqtw.start(test_queue_write_thread);
 	// tqtr.start(test_queue_read_thread);

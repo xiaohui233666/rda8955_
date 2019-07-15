@@ -1,7 +1,7 @@
 #include "mbed.h"
 #include "rtos.h"
 
-InterruptIn key(PA_8);  // PA_8(GPIO10) as gpio_irq pin
+InterruptIn key(PC_0);  // PA_8(GPIO10) as gpio_irq pin
 
 void key_up()
 {
@@ -16,10 +16,11 @@ void key_down()
 int main()
 {
     printf("Start GPIO IRQ test...\r\n");
-
     key.rise(&key_up);
     key.fall(&key_down);
 
     while(true) {
+		 printf("Start GPIO IRQ test...\r\n");
+		 wait_us(500 * 1000);
     }
 }

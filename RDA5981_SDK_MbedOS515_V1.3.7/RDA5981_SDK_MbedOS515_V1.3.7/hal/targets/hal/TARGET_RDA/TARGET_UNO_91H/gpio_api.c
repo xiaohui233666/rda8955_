@@ -33,6 +33,7 @@ static const PinMap PinMap_GPIO[] = {
     {PB_9, (GPIO_0 |  9), 0},
     {PA_8, (GPIO_0 | 10), 0},
     {PA_9, (GPIO_0 | 11), 0},
+    {PC_0, (GPIO_0 | 12), 0},
     {PC_0, (GPIO_0 | 12), 1},
     {PC_1, (GPIO_0 | 13), 1},
     {PC_2, (GPIO_0 | 14), 0},
