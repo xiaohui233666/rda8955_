@@ -192,16 +192,66 @@ printf("(*server).listen(30)\r\n");
 		osDelay(1000);//while(true){};
 	//}
 }
+/*
+*
+ * function: read user data
+ * @data: data to read
+ * @len: length of data in byte
+ * @flag: user data flag
+ * return: 0:success, else:fail
+ *
+int rda5981_read_user_data(unsigned char *data, unsigned short len, unsigned int flag);
+
+*
+ * function: write user data
+ * @data: data to write
+ * @len: length of data in byte
+ * @flag: user data flag
+ * return: 0:success, else:fail
+ *
+int rda5981_write_user_data(unsigned char *data, unsigned short len, unsigned int flag);
+
+*
+ * function: erase user data
+ * @flag: user data flag
+ * return: 0:success, else:fail
+ *
+int rda5981_erase_user_data(unsigned int flag);
+*/
+
+void test_userdata_rw(){
+	//test flag is 0,all data must be limt at 4KB
+	//esare user data
+	unsigned char test_buff[100]={0};
+	printf("esare userdata status %d\r\n",rda5981_erase_user_data(1));
+	printf("read userdata status %d\r\n",rda5981_read_user_data(test_buff, sizeof(test_buff), 1));
+	int tmp_i = 0;
+	for(tmp_i = 0;tmp_i < sizeof(test_buff);tmp_i++)
+	{
+		printf(" %x,",test_buff[tmp_i]);
+		if(tmp_i % 6 == 0){
+			printf("\r\n");
+		}
+	}
+	
+	memset(test_buff,0x55,sizeof(test_buff));
+	printf("write userdata status %d\r\n",rda5981_write_user_data(test_buff, sizeof(test_buff), 1));
+	
+	printf("the read userdata status %d after write data\r\n",rda5981_read_user_data(test_buff, sizeof(test_buff), 1));
+	for(tmp_i = 0;tmp_i < sizeof(test_buff);tmp_i++)
+	{
+		printf(" %x,",test_buff[tmp_i]);
+		if(tmp_i % 6 == 0){
+			printf("\r\n");
+		}
+	}
+}
 
 int main() {
     int tmp_i;
     int ret;
-	test_mesh_tcp_client(0);//find_mesh_dev(0);
-	//rda_thread_new(NULL, test_mesh_tcp_client, (void *)0, 2048,osPriorityLow);
-	//osDelay(1000);
-	t2.start(test_thread);
-	t3.start(test_thread);
 	
+	printf("================================flash user data rw test===================================\r\n");
 	cJSON *root = NULL;
 	char *out = NULL;
 	root = cJSON_CreateObject();
@@ -216,7 +266,19 @@ int main() {
 	printf("json_str_analyze:%s\r\n",out);
 	free(out);
 	cJSON_Delete(root);
-
+	printf("================================            end        ===================================\r\n");
+	
+	
+	printf("================================flash user data rw test===================================\r\n");
+	test_userdata_rw();
+	printf("================================            end        ===================================\r\n");
+	
+	test_mesh_tcp_client(0);//find_mesh_dev(0);
+	//rda_thread_new(NULL, test_mesh_tcp_client, (void *)0, 2048,osPriorityLow);
+	//osDelay(1000);
+	t2.start(test_thread);
+	t3.start(test_thread);
+	
 	// tqtw.start(test_queue_write_thread);
 	// tqtr.start(test_queue_read_thread);
 
