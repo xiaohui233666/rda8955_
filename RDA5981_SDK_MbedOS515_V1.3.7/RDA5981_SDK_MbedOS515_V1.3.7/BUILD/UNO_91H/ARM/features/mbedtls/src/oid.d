@@ -1,0 +1,15 @@
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features\mbedtls\src\oid.c
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: .\BUILD\UNO_91H\ARM\mbed_config.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/config.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/check_config.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/oid.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/asn1.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/bignum.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/pk.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/md.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/rsa.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/ecp.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/ecdsa.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/cipher.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/x509.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\oid.o: ./features/mbedtls/inc/mbedtls/platform.h

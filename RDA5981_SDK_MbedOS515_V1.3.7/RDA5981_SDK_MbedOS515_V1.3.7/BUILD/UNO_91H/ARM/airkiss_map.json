@@ -1,0 +1,19 @@
+[
+    {
+        "module": "Misc", 
+        "size": {
+            ".data": 21247, 
+            ".bss": 289952, 
+            ".text": 378088
+        }
+    }, 
+    {
+        "summary": {
+            "total_flash": 0, 
+            "static_ram": 0, 
+            "stack": 0, 
+            "heap": 0, 
+            "total_ram": 0
+        }
+    }
+]

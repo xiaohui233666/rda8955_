@@ -1,0 +1,10 @@
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal\common\mbed_alloc_wrappers.cpp
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: .\BUILD\UNO_91H\ARM\mbed_config.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal/api/mbed_mem_trace.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal/api/mbed_stats.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal/api/toolchain.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal/api/SingletonPtr.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal/api/mbed_assert.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./rtos/rtx/TARGET_CORTEX_M/cmsis_os.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./hal/api/PlatformMutex.h
+.\BUILD\UNO_91H\ARM\hal\common\mbed_alloc_wrappers.o: ./rtos/rtos/Mutex.h

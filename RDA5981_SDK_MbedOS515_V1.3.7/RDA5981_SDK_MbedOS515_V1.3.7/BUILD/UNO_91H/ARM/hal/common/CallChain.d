@@ -1,0 +1,14 @@
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal\common\CallChain.cpp
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: .\BUILD\UNO_91H\ARM\mbed_config.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/api/CallChain.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/api/Callback.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/TARGET_RDA/TARGET_UNO_91H/cmsis.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/TARGET_RDA/TARGET_UNO_91H/RDA5991H.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/core_cm4.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/core_cmInstr.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/core_cmFunc.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/core_cmSimd.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/TARGET_RDA/TARGET_UNO_91H/system_RDA5991H.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/TARGET_RDA/TARGET_UNO_91H/cmsis_nvic.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/targets/cmsis/TARGET_RDA/TARGET_UNO_91H/cmsis.h
+.\BUILD\UNO_91H\ARM\hal\common\CallChain.o: ./hal/api/critical.h

@@ -1,0 +1,11 @@
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features\mbedtls\src\pem.c
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: .\BUILD\UNO_91H\ARM\mbed_config.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/config.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/check_config.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/pem.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/base64.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/des.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/aes.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/md5.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/cipher.h
+.\BUILD\UNO_91H\ARM\features\mbedtls\src\pem.o: ./features/mbedtls/inc/mbedtls/platform.h
