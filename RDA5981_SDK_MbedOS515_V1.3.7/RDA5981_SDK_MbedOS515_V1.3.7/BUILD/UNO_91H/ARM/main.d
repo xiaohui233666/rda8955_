@@ -136,3 +136,4 @@
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/api.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/netbuf.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/sys.h
+.\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/http.h

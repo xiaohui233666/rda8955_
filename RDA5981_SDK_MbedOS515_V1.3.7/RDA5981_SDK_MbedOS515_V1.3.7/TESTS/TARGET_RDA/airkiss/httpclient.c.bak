@@ -271,6 +271,7 @@ static void free_header(http_header_t* p_header)
 
   free(p_header);
 }
+
 static void dissect_header(char* data, http_response_t* p_resp)
 {
   if (strlen(data) == 0)
