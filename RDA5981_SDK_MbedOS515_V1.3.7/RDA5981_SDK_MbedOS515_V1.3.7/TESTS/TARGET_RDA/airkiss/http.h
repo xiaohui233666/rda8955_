@@ -3,7 +3,9 @@
 
 typedef int socket_t;
 typedef uint32_t http_req_t;
+#ifndef poxis
 typedef uint32_t size_t;
+#endif
 
 typedef enum
 {
@@ -39,6 +41,7 @@ typedef struct
   http_ret_t status;
 } http_response_t;
 
+#ifndef poxis
 char* URL_encode(char* const addr);
 static int dissect_address(char* const address, char* host, const size_t max_host_length, char* resource, const size_t max_resource_length);
 static int build_http_request(const char* host, const char* resource, const http_req_t http_req, char* request,const size_t max_req_size, char** header_lines, const size_t header_line_count, char* const body);
@@ -48,6 +51,6 @@ static void word_to_string(const char* word, char** str);
 static void dissect_header(char* data, http_response_t* p_resp);
 http_response_t* http_request_w_body(char* const address, const http_req_t http_req, char** header_lines, size_t header_line_count, char* const body);
 void http_post(void);
-
+#endif
 
 #endif

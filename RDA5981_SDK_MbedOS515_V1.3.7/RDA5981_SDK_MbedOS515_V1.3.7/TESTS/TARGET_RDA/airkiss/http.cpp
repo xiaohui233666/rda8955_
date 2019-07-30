@@ -1,48 +1,53 @@
-#include <stdio.h>
-#include "mbed.h"
-#include "rtos.h"
-
-#include "WiFiStackInterface.h"
-#include "rda_wdt_api.h"
-#include "rda_sleep_api.h"
-#include "Thread.h"
-#include "cmsis_os.h"
-#include "inet.h"
-#include "lwip/api.h"
-#include "rda_sys_wrapper.h"
-
-
 #include <stdint.h>
 
-#include "http.h"
+
 
 #include <ctype.h>
-#define BUFFER_CHUNK_SIZE 10240
+#define BUFFER_CHUNK_SIZE 30
 #define HTTP_PORT         80
 #define HTTP_1_1_STR      "HTTP/1.1"
+#define HTTP_HDR_MAXLEN 160
 
-//#define poxis
+
+
+#define poxis
 #ifdef poxis
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <string.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <unistd.h>
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <netdb.h>
+	#include <netinet/in.h>
+	#include <errno.h>
+	#include <string.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <ctype.h>
-#include <stdlib.h>
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <netdb.h>
+	#include <ctype.h>
+	#include <stdlib.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <arpa/inet.h>
+
+#else
+
+	#include <stdio.h>
+	#include "mbed.h"
+	#include "rtos.h"
+
+	#include "WiFiStackInterface.h"
+	#include "rda_wdt_api.h"
+	#include "rda_sleep_api.h"
+	#include "Thread.h"
+	#include "cmsis_os.h"
+	#include "inet.h"
+	#include "lwip/api.h"
+	#include "rda_sys_wrapper.h"
+	extern WiFiStackInterface wifi;
 #endif
 
 #define HTTP_REQ_GET      0
@@ -55,7 +60,7 @@
 #define HTTP_REQ_CONNECT  7
 #define HTTP_REQ_PATCH    8
 
-extern WiFiStackInterface wifi;
+#include "http.h"
 
 static const char* HTTP_REQUESTS[] =
 {
@@ -167,8 +172,8 @@ static int build_http_request(const char* host, const char* resource, const http
   printf("\r\ntest\r\n");
   for (unsigned int i = 0; i < header_line_count; ++i)
   {
-    sprintf(request, "%s%s\r\n", request, (char *)(header_lines)+i*100);
-    printf("hdr:%s\r\n",(char *)(header_lines)+i*100);
+    sprintf(request, "%s%s\r\n", request, (char *)(header_lines)+i*HTTP_HDR_MAXLEN);
+    printf("hdr:%s\r\n",(char *)(header_lines)+i*HTTP_HDR_MAXLEN);
   }
   printf("\r\ntest2\r\n");
   strcat(request, "\r\n");
@@ -254,8 +259,8 @@ static char* _http_request(char* address, http_req_t http_req, http_ret_t* p_ret
   size_t http_req_size = 256 + strlen(address);
   for (size_t i = 0; i < header_line_count; ++i)
   {
-    http_req_size += strlen((char *)(header_lines)+i*100);
-    printf("hdr_l:%d\r\n",strlen((char *)(header_lines)+i*100));
+    http_req_size += strlen((char *)(header_lines)+i*HTTP_HDR_MAXLEN);
+    printf("hdr_l:%d\r\n",strlen((char *)(header_lines)+i*HTTP_HDR_MAXLEN));
   }
 
   if (body != NULL)
@@ -291,39 +296,188 @@ static char* _http_request(char* address, http_req_t http_req, http_ret_t* p_ret
   memset(resp_str, 0, buffer_len);
   int32_t tot_len = 0;
   uint32_t cycles = 0;
-  
+  int32_t tmp_pkg_len = 0;
+  char rev_chunk_len_tmp_buff = 0;
+  int tmp_i=0;
   /* Read response from host */
-  do
-  {
-    //len = recv(sock, &resp_str[tot_len], buffer_len - tot_len, 0);
-	#ifndef poxis
-	len = http_tcp_client.recv(&resp_str[tot_len], buffer_len - tot_len);
-	#else
-	len = read(nFd,&resp_str[tot_len], buffer_len - tot_len);
-	#endif
-    if (len <= 0 && cycles >= 0)
-      break;
+  
+  char http_respon1[]="\r\n\r\n";
+	do
+	  {
+		//len = recv(sock, &resp_str[tot_len], buffer_len - tot_len, 0);
+		if(!(tmp_i<sizeof(http_respon1)-1)){
+			printf("\r\nnew buf(%d): %s\r\n",tot_len,resp_str);
+				for(int tmp_r_i = 0; tmp_r_i < tot_len ; tmp_r_i ++)
+				{
+					printf("%c",*(resp_str+tmp_r_i));
+				}
+			printf("\r\n");
+			
+			printf("header end\r\n");
+			break;
+		}
+		
+		
+		#ifndef poxis
+		len = http_tcp_client.recv(&resp_str[tot_len], 1);
+		#else
+		len = read(nFd,&resp_str[tot_len], 1);
+		#endif
+		if (len <= 0 && cycles >= 0){
+			*p_ret = HTTP_ERR_READING;
+			free(resp_str);
+			return NULL;
+		}
+		
 
-    tot_len += len;
+	printf("\r\nnew buf(%d): %s\r\n",len,resp_str+tot_len);
+		for(int tmp_r_i = 0; tmp_r_i < len ; tmp_r_i ++)
+		{
+			printf("%c,",*(resp_str+tot_len+tmp_r_i));
+		}
+	printf("\r\n");
 
-    if (tot_len >= buffer_len)
-    {
-      buffer_len += BUFFER_CHUNK_SIZE;
-      char* newbuf = (char*) realloc(resp_str, buffer_len);
+		printf("rev rev %c dest %c\n",resp_str[tot_len],http_respon1[tmp_i]);
+		if(resp_str[tot_len]==http_respon1[tmp_i]){//note: here have bug when the arrays are zero and the conn closed now
+			tmp_i++;
+		}else{
+			if(tmp_i>0){
+				tmp_i--;
+			}
+		}
 
-      if (newbuf == NULL)
-      {
-        *p_ret = HTTP_ERR_OUT_OF_MEM;
-        free(resp_str);
-        return NULL;
-      }
+		tot_len += len;
+		if (tot_len >= buffer_len)
+		{
+		  buffer_len += BUFFER_CHUNK_SIZE;
+		  char* newbuf = (char*) realloc(resp_str, buffer_len);
 
-      resp_str = newbuf;
-      memset(&resp_str[buffer_len - BUFFER_CHUNK_SIZE], 0, BUFFER_CHUNK_SIZE);
-    }
-    ++cycles;
+		  if (newbuf == NULL)
+		  {
+			*p_ret = HTTP_ERR_OUT_OF_MEM;
+			free(resp_str);
+			return NULL;
+		  }
 
-  } while (1);
+		  resp_str = newbuf;
+		  memset(&resp_str[buffer_len - BUFFER_CHUNK_SIZE], 0, BUFFER_CHUNK_SIZE);
+		}
+		++cycles;
+
+	  } while (1);
+ 
+ 
+while(1){
+		tmp_pkg_len = 0; 
+		while(len > 0){
+			#ifndef poxis
+				len = http_tcp_client.recv(&rev_chunk_len_tmp_buff, 1 );
+			#else
+				len = read(nFd,&rev_chunk_len_tmp_buff, 1);
+			#endif
+			
+			if(len == 0){
+			  #ifndef poxis
+				http_tcp_client.close();
+			  #else
+				close(nFd);
+			  #endif
+			  *p_ret = HTTP_ERR_READING;
+			  return NULL;
+			}
+			printf("rev_chunk_len_tmp_buff:%x(%c)\r\n",rev_chunk_len_tmp_buff,rev_chunk_len_tmp_buff);
+			// rev chunk len
+			if(rev_chunk_len_tmp_buff!='\r'){
+				tmp_pkg_len<<=4;
+				if(rev_chunk_len_tmp_buff >0x29 && rev_chunk_len_tmp_buff <0x3b)
+					rev_chunk_len_tmp_buff-=0x30;
+				else if(rev_chunk_len_tmp_buff >64 && rev_chunk_len_tmp_buff <91)
+					rev_chunk_len_tmp_buff-=55;
+				else if(rev_chunk_len_tmp_buff >96 && rev_chunk_len_tmp_buff <123)
+					rev_chunk_len_tmp_buff-=87;
+				else
+				{
+					printf("\r\ntcp ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-ERR-!\r\n");
+					*p_ret = HTTP_ERR_READING;
+					free(resp_str);
+					return NULL;
+				}
+				tmp_pkg_len+=rev_chunk_len_tmp_buff;
+			}else{
+				break;
+			}
+		}
+		printf("next chunk len:%d\r\n",tmp_pkg_len);
+		if(tmp_pkg_len==0)
+			break;
+	  
+	  // read \n
+		#ifndef poxis
+			len = http_tcp_client.recv(&rev_chunk_len_tmp_buff, 1 );
+		#else
+			len = read(nFd,&rev_chunk_len_tmp_buff, 1);
+		#endif
+
+		if(len == 0){
+			#ifndef poxis
+			http_tcp_client.close();
+			#else
+			close(nFd);
+			#endif
+			*p_ret = HTTP_ERR_READING;
+			return NULL;
+		}
+	   //////////////////////
+	  
+	  do
+	  {
+		//len = recv(sock, &resp_str[tot_len], buffer_len - tot_len, 0);
+
+		
+		#ifndef poxis
+		len = http_tcp_client.recv(&resp_str[tot_len], (buffer_len - tot_len) > tmp_pkg_len ? tmp_pkg_len:(buffer_len - tot_len));
+		#else
+		len = read(nFd,&resp_str[tot_len], (buffer_len - tot_len) > tmp_pkg_len ? tmp_pkg_len:(buffer_len - tot_len));
+		#endif
+		if (len <= 0 && cycles >= 0){
+			*p_ret = HTTP_ERR_READING;
+			free(resp_str);
+			return NULL;
+		}
+		
+
+	printf("\r\nnew buf(%d): %s\r\n",len,resp_str+tot_len);
+		for(int tmp_r_i = 0; tmp_r_i < len ; tmp_r_i ++)
+		{
+			printf("%c",*(resp_str+tot_len+tmp_r_i));
+		}
+	printf("\r\n");
+
+		tot_len += len;
+		tmp_pkg_len -= len;
+		if(tmp_pkg_len == 0){
+			printf("rev chunk end\r\n");
+			break;
+		}
+		if (tot_len >= buffer_len)
+		{
+		  buffer_len += BUFFER_CHUNK_SIZE;
+		  char* newbuf = (char*) realloc(resp_str, buffer_len);
+
+		  if (newbuf == NULL)
+		  {
+			*p_ret = HTTP_ERR_OUT_OF_MEM;
+			free(resp_str);
+			return NULL;
+		  }
+
+		  resp_str = newbuf;
+		  memset(&resp_str[buffer_len - BUFFER_CHUNK_SIZE], 0, BUFFER_CHUNK_SIZE);
+		}
+		++cycles;
+
+	  } while (1);
+}
 
   if (tot_len <= 0)
   {
@@ -522,35 +676,6 @@ http_response_t* http_request_w_body(char* const address, const http_req_t http_
     printf("err:gzip not support\r\n");
     p_resp->status = HTTP_ERR_OUT_OF_MEM;
     return p_resp;
-    /* content length is always stored in the 4 last bytes */
-    //uint32_t content_len = 0;
-    //memcpy(&content_len, resp_str + tot_len - 4, 4);
-
-    /* safe guard against insane sizes */
-    //content_len = ((content_len < 30 * body_len) ? content_len : 30 * body_len);
-
-    //p_resp->contents = (char*) malloc(content_len);
-
-    //if (p_resp->contents == NULL)
-    //{
-    //  p_resp->status = HTTP_ERR_OUT_OF_MEM;
-    //  return p_resp;
-    //}
-
-    /* zlib decompression (gzip) */
-    /*z_stream infstream;
-    memset(&infstream, 0, sizeof(z_stream));
-    infstream.avail_in = (uInt)(body_len);
-    infstream.next_in = (Bytef *)body_pos; 
-    infstream.avail_out = (uInt)content_len;
-    infstream.next_out = (Bytef *)p_resp->contents;
-
-    inflateInit2(&infstream, 16 + MAX_WBITS);
-    inflate(&infstream, Z_NO_FLUSH);
-    inflateEnd(&infstream);
-
-    p_resp->length = content_len;
-    */
   }
   else if (body_len > 0)
   {
@@ -572,12 +697,12 @@ http_response_t* http_request_w_body(char* const address, const http_req_t http_
   return p_resp;
 }
 
-char tmp_hdr[2][170];//={"Content-Type:application/x-www-form-urlencoded","Content-Length:95"};
+char tmp_hdr[2][HTTP_HDR_MAXLEN];//={"Content-Type:application/x-www-form-urlencoded","Content-Length:95"};
 
 void http_post(void)
 {
 	printf("hdr_size:%d\r\n",sizeof(tmp_hdr));
-	memset(tmp_hdr,0,240);
+	memset(tmp_hdr,0,sizeof(tmp_hdr));
 	printf("test1\r\n");
 	strcpy(((char *)(tmp_hdr)),"Content-Type:application/x-www-form-urlencoded");
 	printf("test2:%s\r\n",&tmp_hdr[0]);
@@ -589,3 +714,9 @@ void http_post(void)
 	http_response_t* p_resp = http_request_w_body("http://wy.cmfspay.com/hardware/devicestatus", HTTP_REQ_POST, (char**)tmp_hdr, 2, "sign=38419a28bf6dbd073e59e28c6061a000&time=1552271732&openid=6000001&sv=0.0.1&sn=40011000000027");
 	printf("\r\nRESPONSE FROM :\n%s\n", p_resp->contents);
 }
+
+#ifdef poxis
+	int main(){
+		http_post();
+	}
+#endif
