@@ -50,16 +50,6 @@
 	extern WiFiStackInterface wifi;
 #endif
 
-#define HTTP_REQ_GET      0
-#define HTTP_REQ_HEAD     1
-#define HTTP_REQ_POST     2
-#define HTTP_REQ_PUT      3
-#define HTTP_REQ_DELETE   4
-#define HTTP_REQ_TRACE    5
-#define HTTP_REQ_OPTIONS  6
-#define HTTP_REQ_CONNECT  7
-#define HTTP_REQ_PATCH    8
-
 #include "http.h"
 
 static const char* HTTP_REQUESTS[] =
@@ -697,21 +687,21 @@ http_response_t* http_request_w_body(char* const address, const http_req_t http_
   return p_resp;
 }
 
-char tmp_hdr[2][HTTP_HDR_MAXLEN];//={"Content-Type:application/x-www-form-urlencoded","Content-Length:95"};
+char tmp_test_hdr[2][HTTP_HDR_MAXLEN];//={"Content-Type:application/x-www-form-urlencoded","Content-Length:95"};
 
 void http_post(void)
 {
-	printf("hdr_size:%d\r\n",sizeof(tmp_hdr));
-	memset(tmp_hdr,0,sizeof(tmp_hdr));
+	printf("hdr_size:%d\r\n",sizeof(tmp_test_hdr));
+	memset(tmp_test_hdr,0,sizeof(tmp_test_hdr));
 	printf("test1\r\n");
-	strcpy(((char *)(tmp_hdr)),"Content-Type:application/x-www-form-urlencoded");
-	printf("test2:%s\r\n",&tmp_hdr[0]);
+	strcpy(((char *)(tmp_test_hdr)),"Content-Type:application/x-www-form-urlencoded");
+	printf("test2:%s\r\n",&tmp_test_hdr[0]);
 	
-	sprintf((char *)&(tmp_hdr[1]),"Content-Length:%d",strlen("sign=38419a28bf6dbd073e59e28c6061a000&time=1552271732&openid=6000001&sv=0.0.1&sn=40011000000027"));
+	sprintf((char *)&(tmp_test_hdr[1]),"Content-Length:%d",strlen("sign=38419a28bf6dbd073e59e28c6061a000&time=1552271732&openid=6000001&sv=0.0.1&sn=40011000000027"));
 	
-	printf("test:%s\r\n",&tmp_hdr[1]);
-	printf("test t:%s\r\n",&((char **)tmp_hdr)[0]);
-	http_response_t* p_resp = http_request_w_body("http://wy.cmfspay.com/hardware/devicestatus", HTTP_REQ_POST, (char**)tmp_hdr, 2, "sign=38419a28bf6dbd073e59e28c6061a000&time=1552271732&openid=6000001&sv=0.0.1&sn=40011000000027");
+	printf("test:%s\r\n",&tmp_test_hdr[1]);
+	printf("test t:%s\r\n",&((char **)tmp_test_hdr)[0]);
+	http_response_t* p_resp = http_request_w_body("http://wy.cmfspay.com/hardware/devicestatus", HTTP_REQ_POST, (char**)tmp_test_hdr, 2, "sign=38419a28bf6dbd073e59e28c6061a000&time=1552271732&openid=6000001&sv=0.0.1&sn=40011000000027");
 	printf("\r\nRESPONSE FROM :\n%s\n", p_resp->contents);
 }
 

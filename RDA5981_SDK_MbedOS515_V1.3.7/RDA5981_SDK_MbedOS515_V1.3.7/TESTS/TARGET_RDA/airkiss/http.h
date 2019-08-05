@@ -23,6 +23,15 @@ typedef enum
   HTTP_ERR_IS_HTTPS
 } http_ret_t;
 
+#define HTTP_REQ_GET      0
+#define HTTP_REQ_HEAD     1
+#define HTTP_REQ_POST     2
+#define HTTP_REQ_PUT      3
+#define HTTP_REQ_DELETE   4
+#define HTTP_REQ_TRACE    5
+#define HTTP_REQ_OPTIONS  6
+#define HTTP_REQ_CONNECT  7
+#define HTTP_REQ_PATCH    8
 
 typedef struct 
 {

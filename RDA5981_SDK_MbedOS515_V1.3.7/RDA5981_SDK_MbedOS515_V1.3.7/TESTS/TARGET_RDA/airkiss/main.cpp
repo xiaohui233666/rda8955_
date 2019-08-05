@@ -17,27 +17,16 @@
 #include "http.h"
 
 #include "RC4_Encrypt.h"
+#include "console_cfunc.h"
 #include "b64.h"
 
 #include <stdint.h>
 
 #include "critical.h"
 
-typedef struct {
-    unsigned char *buffer;  /* the buffer holding the data              */
-    unsigned int size;      /* the size of the allocated buffer         */
-    unsigned int in;        /* data is added at offset (in % size)      */
-    unsigned int out;       /* data is extracted from off. (out % size) */
-} kfifo;
-
 #define UART_RING_BUFFER_SIZE  2048
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
-
-static unsigned char uart_recv_ring_buffer[UART_RING_BUFFER_SIZE] = {0};
-
-static kfifo uart_kfifo;
-
 
 
 extern void test_wifi(void);
@@ -190,6 +179,7 @@ int scanNconnect_wifi(void){
 			printf("encode_str: %s\r\n",tmp_str);
 			wifi_ret = wifi.connect((char *)((*(tmp_rda5981_scan_result++)).SSID), tmp_str, NULL, NSAPI_SECURITY_NONE);
 			free(tmp_str);
+			break;
 		}
 	}
 	printf("##########scan return :%d\n", ret);
@@ -197,225 +187,433 @@ int scanNconnect_wifi(void){
 	return wifi_ret;//1 err
 }
 
-//fifo///////////////////////////////////////////////////////////////////////
-int kfifo_init(kfifo *fifo, unsigned char *buffer, unsigned int size)
+//fifo////////////////////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct Node
 {
-	core_util_critical_section_enter();
-    /* size must be a power of 2 */
-    if((size & (size - 1)) != 0)
-        return -1;
+	int data;
+	struct Node *pNext;
+	struct Node *pPre;
+}NODE, *pNODE;
 
-    if (!buffer)
-        return -1;
+#define EXIT_FAILURE 0
 
-    fifo->buffer = buffer;
-    fifo->size = size;
-    fifo->in = fifo->out = 0;
-	core_util_critical_section_exit();
+pNODE CreateDbLinkList(int BufSize);
 
-    return 0;
-}
+void TraverseDbLinkList(pNODE pHead);
 
-static inline void __kfifo_reset(kfifo *fifo)
+int IsEmptyDbLinkList(pNODE pHead);
+
+int GetLengthDbLinkList(pNODE pHead);
+
+int InsertEleDbLinkList(pNODE pHead, int pos, int data);
+
+int DeleteEleDbLinkList(pNODE pHead, int pos);
+
+int GetEleDbLinkList(pNODE pHead, int pos);
+
+void FreeMemory(pNODE *ppHead);
+
+
+
+pNODE CreateDbLinkList(int BufSize)
 {
-    fifo->in = fifo->out = 0;
-}
-
-static inline void kfifo_reset(void)
-{
-	core_util_critical_section_enter();
-
-    __kfifo_reset(&uart_kfifo);
-
-	core_util_critical_section_exit();
-}
-
-unsigned int __kfifo_put(kfifo *fifo,
-            unsigned char *buffer, unsigned int len)
-{
-    unsigned int l;
-
-    len = min(len, fifo->size - fifo->in + fifo->out);
-
-    /*
-     * Ensure that we sample the fifo->out index -before- we
-     * start putting bytes into the kfifo.
-     */
-
-    /* first put the data starting from fifo->in to buffer end */
-    l = min(len, fifo->size - (fifo->in & (fifo->size - 1)));
-    memcpy(fifo->buffer + (fifo->in & (fifo->size - 1)), buffer, l);
-
-    /* then put the rest (if any) at the beginning of the buffer */
-    memcpy(fifo->buffer, buffer + l, len - l);
-
-    /*
-     * Ensure that we add the bytes to the kfifo -before-
-     * we update the fifo->in index.
-     */
-
-    fifo->in += len;
-
-    return len;
-}
-
-unsigned int kfifo_put(unsigned char *buffer, unsigned int len)
-{
-    unsigned int ret;
-
-	core_util_critical_section_enter();
-
-    ret = __kfifo_put(&uart_kfifo, buffer, len);
-
-	core_util_critical_section_exit();
-
-    return ret;
-}
-
-static unsigned int __kfifo_get(kfifo *fifo,
-            unsigned char *buffer, unsigned int len)
-{
-    unsigned int l;
-
-    len = min(len, fifo->in - fifo->out);
-
-    /*
-     * Ensure that we sample the fifo->in index -before- we
-     * start removing bytes from the kfifo.
-     */
-
-    /* first get the data from fifo->out until the end of the buffer */
-    l = min(len, fifo->size - (fifo->out & (fifo->size - 1)));
-    memcpy(buffer, fifo->buffer + (fifo->out & (fifo->size - 1)), l);
-
-    /* then get the rest (if any) from the beginning of the buffer */
-    memcpy(buffer + l, fifo->buffer, len - l);
-
-    /*
-     * Ensure that we remove the bytes from the kfifo -before-
-     * we update the fifo->out index.
-     */
-
-    fifo->out += len;
-
-    return len;
-}
-
-unsigned int kfifo_get(unsigned char *buffer, unsigned int len)
-{
-    unsigned int ret;
-    kfifo *fifo;
-
-	core_util_critical_section_enter();
-
-    fifo = &uart_kfifo;
-
-    ret = __kfifo_get(fifo, buffer, len);
-
-    /*
-     * optimization: if the FIFO is empty, set the indices to 0
-     * so we don't wrap the next time
-     */
-    if (fifo->in == fifo->out)
-        fifo->in = fifo->out = 0;
-
-	core_util_critical_section_exit();
-
-    return ret;
-}
-
-static inline unsigned int __kfifo_len(kfifo *fifo)
-{
-    return fifo->in - fifo->out;
-}
-
-unsigned int kfifo_len(void)
-{
-    unsigned int ret;
+	int i, data = 0;
+	pNODE pTail = 0, p_new = 0;
+	pNODE pHead = (pNODE)malloc(sizeof(NODE));
+ 
+	if (0 == pHead)
+	{
+		printf("内存分配失败！\n");
+		exit(EXIT_FAILURE);
+	}
 	
-	core_util_critical_section_enter();
-
-    ret = __kfifo_len(&uart_kfifo);
-
-	core_util_critical_section_exit();
-
-    return ret;
+	pHead->data = 0;
+	pHead->pPre = 0;
+	pHead->pNext = 0;
+	pTail = pHead;
+ /*
+	for (i=1; i<BufSize+1; i++)
+	{
+		p_new = (pNODE)malloc(sizeof(NODE));
+ 
+		if (0 == p_new)
+		{
+			printf("内存分配失败！\n");
+			return 0;
+		}
+ 
+		printf("请输入第%d个元素的值：", i);
+		scanf("%d", &data);
+ 
+		p_new->data = data;
+		p_new->pNext = 0;
+		p_new->pPre = pTail;
+		pTail->pNext = p_new;
+		pTail = p_new;
+	}
+ */
+	return pHead;
 }
-/*
-	char * test_str[100];
-	kfifo_init(&uart_kfifo, uart_recv_ring_buffer, UART_RING_BUFFER_SIZE);
-	while(1){
-		memset(test_str,0,100);
-		gets(test_str);
-		kfifo_put(test_str,strlen(test_str));
-		int tmp_str_len = strlen(test_str);
-		while(tmp_str_len--){
-			char tmp_s;
-			int ret = kfifo_get(&tmp_s,1);
-			printf(",%c\r\n",tmp_s);
+
+void TraverseDbLinkList(pNODE pHead)
+{
+	pNODE pt = pHead->pNext;
+ 
+	printf("打印链表如：");
+	while (pt != 0)
+	{
+		printf("%d ", pt->data);
+		pt = pt->pNext;
+	}
+	putchar('\n');
+}
+
+int IsEmptyDbLinkList(pNODE pHead)
+{
+	pNODE pt = pHead->pNext;
+ 
+	if (pt == 0)
+		return 1;
+	else
+		return 0;
+}
+
+int GetLengthDbLinkList(pNODE pHead)
+{
+	int length = 0;
+	pNODE pt = pHead->pNext;
+ 
+	while (pt != 0)
+	{
+		length++;
+		pt = pt->pNext;
+	}
+	return length;
+}
+
+int InsertEleDbLinkList(pNODE pHead, int pos, int data)
+{
+	pNODE pt = 0, p_new = 0;
+ 
+	if (pos > 0 && pos < GetLengthDbLinkList(pHead)+2)
+	{
+		p_new = (pNODE)malloc(sizeof(NODE));
+ 
+		if (0 == p_new)
+		{
+			printf("内存分配失败！\n");
+			exit(EXIT_FAILURE);
+		}
+ 
+		while (1)
+		{
+			pos--;
+			if (0 == pos)
+				break;
+			pHead = pHead->pNext;
 		}
 		
+		pt = pHead->pNext;
+		p_new->data = data;
+		p_new->pNext = pt;
+		if (0 != pt)
+			pt->pPre = p_new;
+		p_new->pPre = pHead;
+		pHead->pNext = p_new;
+		
+		return 1;
 	}
-*/
-//fifo end////////////////////////////////////////////////////////////////////
+	else
+		return 0;
+}
+
+int DeleteEleDbLinkList(pNODE pHead, int pos)
+{
+	pNODE pt = 0;
+ 
+	if (pos > 0 && pos < GetLengthDbLinkList(pHead) + 1)
+	{
+		while (1)
+		{
+			pos--;
+			if (0 == pos)
+				break;
+			pHead = pHead->pNext;
+		}
+ 
+		pt = pHead->pNext->pNext;
+		free(pHead->pNext);
+		pHead->pNext = pt;
+		if (0 != pt)
+			pt->pPre = pHead;
+ 
+		return 1;
+	}
+	else
+		return 0;
+}
+
+int GetEleDbLinkList(pNODE pHead, int pos)
+{
+	pNODE pt = 0;
+ 
+	if (pos > 0 && pos < GetLengthDbLinkList(pHead) + 1)
+	{
+		while (1)
+		{
+			pos--;
+			if (0 == pos)
+				break;
+			pHead = pHead->pNext;
+		}
+		return pHead->pNext->data;
+ 
+		return 1;
+	}
+	else
+		return 0;
+}
+
+void FreeMemory(pNODE *ppHead)
+{
+	pNODE pt = 0;
+ 
+	while (*ppHead != 0)
+	{
+		pt = (*ppHead)->pNext;
+		free(*ppHead);
+		if (0 != pt)
+			pt->pPre = 0;
+		*ppHead = pt;
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* UART Serial Pins: tx, rx */
-/*
+pNODE head = 0;
 mbed::RawSerial serial(UART0_TX, UART0_RX);
-
+unsigned char tmp_uart_char;
 void rx_irq_handler(void)
 {
     while(serial.readable()) {
 		
-		message_t *message = mpool.alloc();
-        message->c = ti;
-        queue.put(message);
-        Thread::wait(QUEUE_PUT_DELAY);
-        osDelay(1000);
-		
-        serial.putc(serial.getc());
+		// message_t *message = mpool.alloc();
+        // message->c = ti;
+        // queue.put(message);
+        // Thread::wait(QUEUE_PUT_DELAY);
+        // osDelay(1000);
+		tmp_uart_char=serial.getc();
+		InsertEleDbLinkList(head, GetLengthDbLinkList(head)+1, tmp_uart_char);
+		printf("read_c:%c\r\n",tmp_uart_char);
+        //serial.putc(serial.getc());
     }
 }
 
+void deal_searial_input(void);
+Thread uart_thread;
 int test_serial()
 {
+	head = CreateDbLinkList(UART_RING_BUFFER_SIZE);
+	
+	int flag = IsEmptyDbLinkList(head);
+	if (flag)
+		printf("双向链表为空！\n");
+	else
+	{
+		int length = GetLengthDbLinkList(head);
+		printf("双向链表的长度为：%d\n", length);
+		TraverseDbLinkList(head);
+	}
+	
     serial.baud(921600);
     serial.format(8, SerialBase::None, 1);
     serial.printf("Start Serial test...\r\n");
     serial.attach(rx_irq_handler, SerialBase::RxIrq);
     serial.printf("Wait forever\r\n");
+	
+	uart_thread.start(deal_searial_input);
+	
     //Thread::wait(osWaitForever);
 }
 
-static unsigned char tmp_buff[2048] = {0};
-static unsigned int tmp_buff_offset = 0;
-typedef rev_status_t enum{
-	WaitHeader = 0,
-	WaitLengthRevFin = 1,
-	RevicingData = 2,
-	WaitEndFlag = 3,
+// static unsigned char tmp_buff[2048] = {0};
+// static unsigned int tmp_buff_offset = 0;
+// typedef rev_status_t enum{
+	// WaitHeader = 0,
+	// WaitLengthRevFin = 1,
+	// RevicingData = 2,
+	// WaitEndFlag = 3,
+// }
+//<123<aaaaaaaaaxx>
+/*
+	接收数据的时候很可能会发生误码
+	误码情况：
+	<len data crc>
+	<len <len data crc>
+	<len data crc> crc>
+	<len <len data crc> crc>
+	识别：
+	1,<
+	2,长度
+	3,获取数据
+	4,判断crc
+	5,crc err 去掉第一个<后继续寻找<,继续判断crc，直到crc正确->处理数据。
+
+
+	fifo处理
+	1,<
+	fi 2,长度
+	fi 3,获取数据
+	fi 4,判断crc
+	5,crc err 去掉第一个<后继续寻找<,继续判断crc，直到crc正确->处理数据。
+
+	结论，需要双向链表，待解决
+	尝试使用单纯的fifo解决,使用双fifo解决
+
+	(put data which rev from uart fifo every step),failed
+	1，rev hdr
+	2,rev 2byte len and put them into fifo
+	3,rev data and put them into fifo
+	4,rev crc, if crc error ,就把剩下的数据也取出并保存到后面,继续从fifo执行第一步。
+
+*/
+#define HTTP_HDR_MAXLEN 160
+char tmp_hdr[2][HTTP_HDR_MAXLEN];
+void analyze_json(unsigned char *str){
+	
+	cJSON *root = NULL;
+	char *out = NULL;
+	root = cJSON_CreateObject();
+	root = cJSON_Parse((char *)str);
+	out = cJSON_Print(root);
+	printf("json_str_analyze:%s\r\n",out);
+	
+	cJSON *Type = cJSON_GetObjectItem(root,"type");
+	printf("type:%s\n",Type->valuestring);
+	if(strcmp(Type->valuestring,"http")){
+		
+		cJSON *Url = cJSON_GetObjectItem(root,"Url");
+		printf("Url:%s\n",Url->valuestring);
+		
+		cJSON *Mothed = cJSON_GetObjectItem(root,"Mothed");
+		printf("Mothed:%s\n",Mothed->valuestring);
+		
+		cJSON *Data = cJSON_GetObjectItem(root,"Data");
+		printf("Data:%s\n",Data->valuestring);
+		
+		
+		printf("hdr_size:%d\r\n",sizeof(tmp_hdr));
+		memset(tmp_hdr,0,sizeof(tmp_hdr));
+		printf("test1\r\n");
+		strcpy(((char *)(tmp_hdr)),"Content-Type:application/x-www-form-urlencoded");
+		printf("test2:%s\r\n",&tmp_hdr[0]);
+		
+		sprintf((char *)&(tmp_hdr[1]),"Content-Length:%d",strlen(Data->valuestring));
+		
+		printf("test:%s\r\n",&tmp_hdr[1]);
+		printf("test t:%s\r\n",&((char **)tmp_hdr)[0]);
+		http_response_t* p_resp = http_request_w_body("http://wy.cmfspay.com/hardware/devicestatus", HTTP_REQ_POST, (char**)tmp_hdr, 2, Data->valuestring);
+		printf("\r\nRESPONSE FROM :\n%s\n", p_resp->contents);
+		
+	}else if(strcmp(Type->valuestring,"socket")){
+	
+		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
+		printf("Ip:%s\n",Ip->valuestring);
+		
+		cJSON *Port = cJSON_GetObjectItem(root,"Port");
+		printf("Port:%s\n",Port->valuestring);
+		
+		cJSON *Data = cJSON_GetObjectItem(root,"Data");
+		printf("Data:%s\n",Data->valuestring);
+		
+		
+		
+	}else if(strcmp(Type->valuestring,"at")){
+		cJSON *Code = cJSON_GetObjectItem(root,"Code");
+		printf("Code:%s\n",Code->valuestring);
+
+		if(run_command(Code->valuestring) < 0) {
+			printf("command fail\r\n");
+		}
+
+	}
+	
+	free(out);
+	cJSON_Delete(root);
 }
-void deal_searial_input(unsigned char * input_char){
-	tmp_buff[tmp_buff_offset] = *input_char;
-	rev_status_t rev_status=WaitHeader;
-	switch (rev_status)
-	{
-	case WaitHeader:
-		if(tmp_buff[tmp_buff_offset] =="<" )
-		break;
-	case WaitLengthRevFin:
+
+unsigned char json_buf[1024];
+void deal_searial_input(void){
+	int tmp_pkg_len;
+	int tmp_pkg_len_i;
+	int tmp_pos = 1;
+	int tmp_Dat_pos;
+	unsigned char tmp_check;
+	while(1){
 		
-		break;
-	case 
-	case WaitEndFlag:
+		tmp_pos = 1;
+		tmp_check = 0;
+		//wait hdr
+		while(1){
+			while(tmp_pos > GetLengthDbLinkList(head));
+			if(GetEleDbLinkList(head, tmp_pos) == '<'){
+				DeleteEleDbLinkList(head,tmp_pos);
+				break;
+			}
+			DeleteEleDbLinkList(head,tmp_pos);
+		}
+		//wait pkg len
+		while(tmp_pos > GetLengthDbLinkList(head));
+		tmp_pos++;
+		tmp_pkg_len += GetEleDbLinkList(head, tmp_pos);
+		tmp_check += GetEleDbLinkList(head, tmp_pos);
+		while(tmp_pos > GetLengthDbLinkList(head));
+		tmp_pos++;
+		tmp_pkg_len += GetEleDbLinkList(head, tmp_pos);
+		tmp_check += GetEleDbLinkList(head, tmp_pos);
 		
-		break;
-	default:
-		//error
-		break;
+		tmp_pkg_len_i = tmp_pkg_len;
+		tmp_Dat_pos = tmp_pos + 1;
+		//rev data
+		while(tmp_pkg_len_i--){
+			while(tmp_pos > GetLengthDbLinkList(head));
+			tmp_pos++;
+			tmp_check += GetEleDbLinkList(head, tmp_pos);
+		}
+		//rev crc
+		unsigned char check;
+		while(tmp_pos > GetLengthDbLinkList(head));
+		tmp_pos++;
+		check = GetEleDbLinkList(head, tmp_pos);
+		
+		//check crc
+		
+		if(check == tmp_check){
+			//rev data
+			memset(json_buf,0,sizeof(json_buf));
+			while(tmp_pkg_len_i--){
+				unsigned char *tmp_json_buf_p;
+				tmp_json_buf_p = json_buf;
+				*tmp_json_buf_p = GetEleDbLinkList(head, tmp_Dat_pos);
+				tmp_Dat_pos++;
+			}
+			DeleteEleDbLinkList(head,1);
+			DeleteEleDbLinkList(head,1);
+			tmp_pkg_len_i = tmp_pkg_len;
+			while(tmp_pkg_len_i--){
+				DeleteEleDbLinkList(head,1);
+			}
+			analyze_json(json_buf);
+		}else{
+			//crc err
+			tmp_pos = 1;
+			break;
+		}
 	}
 }
-*/
+
 
 int main() {
 	
@@ -476,6 +674,7 @@ int main() {
 	printf("************************************************          end        ************************************************\r\n");
 
     while (true) {
+		//loop
         
     }
 }
