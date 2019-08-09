@@ -687,6 +687,7 @@ http_response_t* http_request_w_body(char* const address, const http_req_t http_
   return p_resp;
 }
 
+/*
 char tmp_test_hdr[2][HTTP_HDR_MAXLEN];//={"Content-Type:application/x-www-form-urlencoded","Content-Length:95"};
 
 void http_post(void)
@@ -704,7 +705,7 @@ void http_post(void)
 	http_response_t* p_resp = http_request_w_body("http://wy.cmfspay.com/hardware/devicestatus", HTTP_REQ_POST, (char**)tmp_test_hdr, 2, "sign=38419a28bf6dbd073e59e28c6061a000&time=1552271732&openid=6000001&sv=0.0.1&sn=40011000000027");
 	printf("\r\nRESPONSE FROM :\n%s\n", p_resp->contents);
 }
-
+*/
 #ifdef poxis
 	int main(){
 		http_post();

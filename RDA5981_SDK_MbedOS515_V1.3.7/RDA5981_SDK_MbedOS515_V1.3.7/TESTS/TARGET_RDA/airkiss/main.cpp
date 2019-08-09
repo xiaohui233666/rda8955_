@@ -409,6 +409,7 @@ void rx_irq_handler(void)
         // osDelay(1000);
 		tmp_uart_char=serial.getc();
 		InsertEleDbLinkList(head, GetLengthDbLinkList(head)+1, tmp_uart_char);
+		//DeleteEleDbLinkList(head,GetLengthDbLinkList(head)+1);
 		printf("read_c:%c\r\n",tmp_uart_char);
         //serial.putc(serial.getc());
     }
@@ -416,6 +417,9 @@ void rx_irq_handler(void)
 
 void deal_searial_input(void);
 Thread uart_thread;
+
+
+
 int test_serial()
 {
 	head = CreateDbLinkList(UART_RING_BUFFER_SIZE);
@@ -633,6 +637,16 @@ void test_ntp(void){
 }
 
 unsigned char json_buf[100];
+
+/* void deal_searial_input(void){
+	while(1){
+		printf("GetLengthDbLinkList(head)=%d\r\n",GetLengthDbLinkList(head));
+		DeleteEleDbLinkList(head,GetLengthDbLinkList(head));
+		//printf("GetLengthDbLinkList(head)\r\n");
+		//wait_us(100 * 1000);
+	}
+} */
+
 void deal_searial_input(void){
 	unsigned int tmp_pkg_len;
 	unsigned int tmp_pkg_len_i;
@@ -644,10 +658,10 @@ void deal_searial_input(void){
 		tmp_pos = 1;
 		tmp_check = 0;
 		//wait hdr
-		printf("wait hdr\r\n");
+		//printf("wait hdr\r\n");
 		while(1){
 			while(tmp_pos > GetLengthDbLinkList(head));
-			printf("read_fifo:%c[%x,%d]\r\n",GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos));
+			//printf("read_fifo:%c[%x,%d]\r\n",GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos));
 			if(GetEleDbLinkList(head, tmp_pos) == '<'){
 				DeleteEleDbLinkList(head,tmp_pos);
 				break;
@@ -655,42 +669,68 @@ void deal_searial_input(void){
 			DeleteEleDbLinkList(head,tmp_pos);
 		}
 		//wait pkg len
-		printf("wait pkg len\r\n");
-		tmp_pos++;
-		while(GetLengthDbLinkList(head) < tmp_pos){printf("wait pkg len:%d\r\n",GetLengthDbLinkList(head));}
+		//printf("wait pkg len\r\n");
+		while(GetLengthDbLinkList(head) < tmp_pos)
 		tmp_pkg_len = GetEleDbLinkList(head, tmp_pos);
 		tmp_check += GetEleDbLinkList(head, tmp_pos);
-		printf("wait pkg len:%d\r\n",GetEleDbLinkList(head, tmp_pos));
+		//printf("wait pkg len:%d\r\n",GetEleDbLinkList(head, tmp_pos));
 		
 		tmp_pos++;
 		while(GetLengthDbLinkList(head) < tmp_pos);
 		tmp_pkg_len = tmp_pkg_len << 8;
 		tmp_pkg_len += GetEleDbLinkList(head, tmp_pos);
 		tmp_check += GetEleDbLinkList(head, tmp_pos);
-		printf("wait pkg len:%d\r\n",GetEleDbLinkList(head, tmp_pos));
+		//printf("wait pkg len:%d\r\n",GetEleDbLinkList(head, tmp_pos));
+		
+		
+		//rev len crc
+		//printf("rev len crc : %x\r\n",tmp_check);
+		unsigned char len_crc_check;
+		tmp_pos++;
+		while(GetLengthDbLinkList(head) < tmp_pos);
+		len_crc_check = GetEleDbLinkList(head, tmp_pos);
+		
+		//check len crc
+		//printf("check crc check:%x,tmp_check:%x\r\n",len_crc_check,tmp_check);
+		if(len_crc_check != tmp_check){
+			//len crc err
+			//printf("len crc err check:%x,tmp_check:%x\r\n",len_crc_check,tmp_check);
+			tmp_pos = 1;
+			continue;
+		}
 		
 		tmp_pkg_len_i = tmp_pkg_len;
 		tmp_Dat_pos = tmp_pos + 1;
 		//rev data
-		printf("rev data tmp_pkg_len_i:%d\r\n",tmp_pkg_len_i);
+		//printf("rev data tmp_pkg_len_i:%d\r\n",tmp_pkg_len_i);
 		while(tmp_pkg_len_i--){
 			tmp_pos++;
 			while(GetLengthDbLinkList(head) < tmp_pos);
 			tmp_check += GetEleDbLinkList(head, tmp_pos);
-			printf("rev data[%d]=%c\r\n",tmp_pos,GetEleDbLinkList(head, tmp_pos));
+			//printf("rev data[%d]=%c\r\n",tmp_pos,GetEleDbLinkList(head, tmp_pos));
 		}
 		//rev crc
-		printf("rev crc : %x\r\n",tmp_check);
+		//printf("rev crc : %x\r\n",tmp_check);
 		unsigned char check;
 		tmp_pos++;
 		while(GetLengthDbLinkList(head) < tmp_pos);
 		check = GetEleDbLinkList(head, tmp_pos);
 		
+		tmp_pos++;
+		while(GetLengthDbLinkList(head) < tmp_pos);
+		if(GetEleDbLinkList(head, tmp_pos) != '>'){
+			//pkg end err
+			//printf("pkg end err:%c,%x\r\n",GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos));
+			tmp_pos = 1;
+			continue;
+		}
+		
 		//check crc
-		printf("check crc check:%d,tmp_check:%d\r\n",check,tmp_check);
+		//printf("check crc check:%d,tmp_check:%d\r\n",check,tmp_check);
 		if(check == tmp_check){
 			//rev data
 			memset(json_buf,0,sizeof(json_buf));
+			tmp_pkg_len_i = tmp_pkg_len;
 			while(tmp_pkg_len_i--){
 				unsigned char *tmp_json_buf_p;
 				tmp_json_buf_p = json_buf;
@@ -703,14 +743,17 @@ void deal_searial_input(void){
 			while(tmp_pkg_len_i--){
 				DeleteEleDbLinkList(head,1);
 			}
-			analyze_json(json_buf);
+			printf("data:%x\r\n",json_buf[0]);
+			//analyze_json(json_buf);
 		}else{
 			//crc err
 			printf("crc err check:%d,tmp_check:%d\r\n",check,tmp_check);
 			tmp_pos = 1;
-			break;
+			continue;
 		}
+		//wait_us(10 * 1000);
 	}
+	
 }
 
 
@@ -725,11 +768,11 @@ int main() {
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================flash user data rw test===================================\r\n");
-	test_userdata_rw();
+	//test_userdata_rw();
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================start serial rw test===================================\r\n");
-	test_userdata_rw();
+	//test_userdata_rw();
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================start connect wifi test===================================\r\n");
@@ -745,7 +788,7 @@ int main() {
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================start http post test===================================\r\n");
-	http_post();
+	//http_post();
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================start ntp test===================================\r\n");
@@ -775,9 +818,7 @@ int main() {
 	//start deal come code rev from uart
 	
 	printf("************************************************          end        ************************************************\r\n");
-
-	test_serial();
-
+test_serial();
     while (true) {
 		//loop
 		
