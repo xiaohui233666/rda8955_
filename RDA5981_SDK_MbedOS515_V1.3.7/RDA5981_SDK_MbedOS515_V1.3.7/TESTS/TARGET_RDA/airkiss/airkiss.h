@@ -109,7 +109,6 @@ int airkiss_set_key(airkiss_context_t* context, const unsigned char* key, unsign
 const char* airkiss_version(void);
 
 
-
 /*
  * 初始化AirKiss库，如要复用context，可以多次调用
  *
