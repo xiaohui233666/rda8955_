@@ -8,6 +8,9 @@
 #include "rda5991h_wland.h"
 #include "lwip_stack.h"
 
+#include "rda_wdt_api.h"
+#include "rda_ccfg_api.h"
+
 #include <stdio.h>
 #include <time.h>
 
@@ -27,6 +30,9 @@
 
 #include "critical.h"
 
+#include "serial_api.h"
+#include "myconsole.h"
+
 #define UART_RING_BUFFER_SIZE  2048
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -43,9 +49,17 @@ void *wifi_main_msgQ;
   #error [NOT_SUPPORTED] test not supported
 #endif
 
+
+rda_console_t p_rda_console;
+rtos::Mutex fifo_lock;
+
 void tzset(void);
 WiFiStackInterface wifi;
 
+//#define core_util_critical_section_enter() fifo_lock.lock()
+//#define core_util_critical_section_exit() fifo_lock.unlock()
+#define core_util_critical_section_enter()
+#define core_util_critical_section_exit()
 void wifi_status_thread(){
 	int ret, cnt = 1;
 	unsigned int msg;
@@ -229,7 +243,7 @@ pNODE CreateDbLinkList(int BufSize)
 	pNODE pTail = 0, p_new = 0;
 	
 	pNODE pHead = (pNODE)malloc(sizeof(NODE));
- core_util_critical_section_enter();
+	core_util_critical_section_enter();
 	if (0 == pHead)
 	{
 		//printf("内存分配失败！\n");
@@ -271,13 +285,13 @@ void TraverseDbLinkList(pNODE pHead)
 	core_util_critical_section_enter();
 	pNODE pt = pHead->pNext;
  
-	printf("打印链表如：");
+/* 	printf("打印链表如：");
 	while (pt != 0)
 	{
 		printf("%d ", pt->data);
 		pt = pt->pNext;
 	}
-	putchar('\n');
+	putchar('\n'); */
 	core_util_critical_section_exit();
 }
 
@@ -297,9 +311,11 @@ int IsEmptyDbLinkList(pNODE pHead)
 
 int GetLengthDbLinkList(pNODE pHead)
 {
-	core_util_critical_section_enter();
 	int length = 0;
-	pNODE pt = pHead->pNext;
+	core_util_critical_section_enter();
+	
+	length = pHead->Len;
+	//pNODE pt = pHead->pNext;
  /*
 	while (pt != 0)
 	{
@@ -308,26 +324,44 @@ int GetLengthDbLinkList(pNODE pHead)
 	}
 */
 	core_util_critical_section_exit();
-	return pHead->Len;
+	return length;
 }
 
-int InsertEleDbLinkList(pNODE pHead, int pos, unsigned char data)
+int GetLengthDbLinkList2(pNODE pHead)
 {
+	int length = 0;
+	
+	length = pHead->Len;
+	//pNODE pt = pHead->pNext;
+ /*
+	while (pt != 0)
+	{
+		length++;
+		pt = pt->pNext;
+	}
+*/
+	return length;
+}
+
+inline int InsertEleDbLinkList(pNODE pHead, int pos, unsigned char data)
+{
+	printf("InsertEleDbLinkList\r\n");
 	core_util_critical_section_enter();
+	//printf("InsertEleDbLinkList1\r\n");
 	pNODE pt = 0, p_new = 0;
  
 	pNODE tmp_pHead = pHead;
 	tmp_pHead = pHead;
 	//printf("enter InsertEleDbLinkList\r\n");
 	
-	
-	if (pos > 0 && pos < GetLengthDbLinkList(pHead)+2)
+	if (pos > 0 && pos < GetLengthDbLinkList2(pHead)+2)
 	{
-		core_util_critical_section_exit();
+		//printf("InsertEleDbLinkList2\r\n");
 		//printf("enter InsertEleDbLinkList (pNODE)malloc(sizeof(NODE))\r\n");
+		core_util_critical_section_exit();
 		p_new = (pNODE)malloc(sizeof(NODE));
 		core_util_critical_section_enter();
-		
+		//printf("InsertEleDbLinkList3\r\n");
 		if (0 == p_new)
 		{
 			printf("allo cmem err！\n");
@@ -354,10 +388,12 @@ int InsertEleDbLinkList(pNODE pHead, int pos, unsigned char data)
 		
 		//printf("tmp_pHead->Len:%d\r\n",tmp_pHead->Len);
 		core_util_critical_section_exit();
+		//printf("InsertEleDbLinkList end \r\n");
 		return 1;
 	}
 	else{
 		core_util_critical_section_exit();
+		//printf("InsertEleDbLinkList end \r\n");
 		return 0;
 	}
 }
@@ -368,7 +404,7 @@ int DeleteEleDbLinkList(pNODE pHead, int pos)
 	pNODE pt = 0;
 	pNODE tmp_pHead = pHead;
 	tmp_pHead = pHead;
-	if (pos > 0 && pos < GetLengthDbLinkList(pHead) + 1)
+	if (pos > 0 && pos < GetLengthDbLinkList2(pHead) + 1)
 	{
 		while (1)
 		{
@@ -401,7 +437,7 @@ unsigned char GetEleDbLinkList(pNODE pHead, int pos)
 	core_util_critical_section_enter();
 	pNODE pt = 0;
  
-	if (pos > 0 && pos < GetLengthDbLinkList(pHead) + 1)
+	if (pos > 0 && pos < GetLengthDbLinkList2(pHead) + 1)
 	{
 		while (1)
 		{
@@ -440,26 +476,33 @@ void FreeMemory(pNODE *ppHead)
 
 /* UART Serial Pins: tx, rx */
 pNODE head = 0;
+extern serial_t stdio_uart;
 mbed::RawSerial serial(UART0_TX, UART0_RX);
 unsigned char tmp_uart_char;
-void rx_irq_handler(void)
+//void rx_irq_handler(void)
+static void console_irq_handler(uint32_t id, SerialIrq event)
 {
-    while(serial.readable()) {
+	if(RxIrq == event)
+	while(serial_readable(&stdio_uart))
+    {
+//    while(serial.readable()) {
 		
 		// message_t *message = mpool.alloc();
         // message->c = ti;
         // queue.put(message);
         // Thread::wait(QUEUE_PUT_DELAY);
         // osDelay(1000);
-		tmp_uart_char=serial.getc();
+		tmp_uart_char=serial_getc(&stdio_uart);//serial.getc();
 		InsertEleDbLinkList(head, GetLengthDbLinkList(head)+1, tmp_uart_char);
+		
 		//DeleteEleDbLinkList(head,GetLengthDbLinkList(head)+1);
 		printf("read_c:%c\r\n",tmp_uart_char);
         //serial.putc(serial.getc());
     }
+	//osSemaphoreRelease(p_rda_console.console_sema.sema_id);
 }
 
-void deal_searial_input(void);
+void deal_searial_input(const void *arg);
 Thread uart_thread;
 
 int test_serial()
@@ -472,15 +515,35 @@ int test_serial()
 	else
 	{
 		int length = GetLengthDbLinkList(head);
-		printf("双向链表的长度为：%d\n", length);
+		//printf("双向链表的长度为：%d\n", length);
 		TraverseDbLinkList(head);
 	}
 	
-    serial.baud(921600);
+	p_rda_console.cmd_cnt = 0;
+
+	#ifdef CMSIS_OS_RTX
+		memset(p_rda_console.console_sema.data, 0, sizeof(p_rda_console.console_sema.data));
+		p_rda_console.console_sema.def.semaphore = p_rda_console.console_sema.data;
+	#endif
+    p_rda_console.console_sema.sema_id = osSemaphoreCreate(&p_rda_console.console_sema.def, 0);
+	
+	serial_init(&stdio_uart, UART0_TX, UART0_RX);
+	
+    serial_baud(&stdio_uart,115200);
+    serial_clear(&stdio_uart);
+    stdio_uart.uart->IER |= 1 << 0;
+	
+	serial_irq_handler(&stdio_uart, console_irq_handler, (uint32_t)(&p_rda_console));
+    serial_irq_set(&stdio_uart, RxIrq, 1);
+	
+	static osThreadDef(deal_searial_input, osPriorityNormal, 6*1024);
+    p_rda_console.thread_id = osThreadCreate(osThread(deal_searial_input), NULL);
+	
+/*     serial.baud(115200);
     serial.format(8, SerialBase::None, 1);
     serial.printf("Start Serial test...\r\n");
     serial.attach(rx_irq_handler, SerialBase::RxIrq);
-    serial.printf("Wait\r\n");
+    serial.printf("Wait\r\n"); */
 	
 	//uart_thread.start(deal_searial_input);
 	
@@ -530,10 +593,11 @@ int test_serial()
 */
 #define HTTP_HDR_MAXLEN 160
 char tmp_hdr[2][HTTP_HDR_MAXLEN];
-void analyze_json(unsigned char *str){
+cJSON *root = NULL;
+char *out = NULL;
+inline void analyze_json(unsigned char *str){
 	
-	cJSON *root = NULL;
-	char *out = NULL;
+
 	root = cJSON_CreateObject();
 	root = cJSON_Parse((char *)str);
 	out = cJSON_Print(root);
@@ -687,21 +751,22 @@ unsigned char json_buf[100];
 	}
 } */
 
-void deal_searial_input(void){
+void deal_searial_input(const void *arg){
 	unsigned int tmp_pkg_len;
 	unsigned int tmp_pkg_len_i;
 	int tmp_pos = 1;
 	int tmp_Dat_pos;
 	unsigned char tmp_check;
 	while(1){
-		
+		//osSemaphoreRelease(p_rda_console.console_sema.sema_id);
 		tmp_pos = 1;
 		tmp_check = 0;
 		tmp_pkg_len = 0;
+	
 		//wait hdr
 		printf("wait hdr\r\n");
 		while(1){
-			while(tmp_pos > GetLengthDbLinkList(head)){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+			while(tmp_pos > GetLengthDbLinkList(head)){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 			printf("read_fifo:%c[%x,%d]\r\n",GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos));
 			if(GetEleDbLinkList(head, tmp_pos) == '<'){
 				DeleteEleDbLinkList(head,tmp_pos);
@@ -711,13 +776,13 @@ void deal_searial_input(void){
 		}
 		//wait pkg len
 		printf("wait pkg len\r\n");
-		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 		tmp_pkg_len = GetEleDbLinkList(head, tmp_pos);
 		tmp_check = GetEleDbLinkList(head, tmp_pos);
 		printf("wait pkg len:%d\r\n",GetEleDbLinkList(head, tmp_pos));
 		
 		tmp_pos++;
-		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 		tmp_pkg_len = tmp_pkg_len << 8;
 		tmp_pkg_len += GetEleDbLinkList(head, tmp_pos);
 		tmp_check += GetEleDbLinkList(head, tmp_pos);
@@ -728,7 +793,7 @@ void deal_searial_input(void){
 		printf("rev len crc : %x\r\n",tmp_check);
 		unsigned char len_crc_check;
 		tmp_pos++;
-		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 		len_crc_check = GetEleDbLinkList(head, tmp_pos);
 		
 		//check len crc
@@ -746,7 +811,7 @@ void deal_searial_input(void){
 		printf("rev data tmp_pkg_len_i:%d\r\n",tmp_pkg_len_i);
 		while(tmp_pkg_len_i--){
 			tmp_pos++;
-			while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+			while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 			tmp_check += GetEleDbLinkList(head, tmp_pos);
 			printf("rev data[%d]=%c\r\n",tmp_pos,GetEleDbLinkList(head, tmp_pos));
 		}
@@ -754,11 +819,11 @@ void deal_searial_input(void){
 		printf("rev crc : %x\r\n",tmp_check);
 		unsigned char check;
 		tmp_pos++;
-		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 		check = GetEleDbLinkList(head, tmp_pos);
 		
 		tmp_pos++;
-		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));wait_us(100 * 1000);}
+		while(GetLengthDbLinkList(head) < tmp_pos){printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 		if(GetEleDbLinkList(head, tmp_pos) != '>'){
 			//pkg end err
 			printf("pkg end err:%c,%x\r\n",GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos));
@@ -789,13 +854,13 @@ void deal_searial_input(void){
 			DeleteEleDbLinkList(head,1);
 			printf("data:%s\r\n",json_buf);
 			analyze_json(json_buf);
+			continue;
 		}else{
 			//crc err
 			printf("crc err check:%d,tmp_check:%d\r\n",check,tmp_check);
 			tmp_pos = 1;
 			continue;
 		}
-		//wait_us(10 * 1000);
 	}
 	
 }
@@ -842,7 +907,25 @@ void print_heap_info(void){
 }
 
 
+void feed_dog_thread(void *arg){
+	int cnt = 0;
+	wdt_t *obj_p;
+	obj_p = (wdt_t *)arg;
+	while(true) {
+		printf("alive\r\n");
+        Thread::wait(1500);
+        cnt++;
+        rda_wdt_feed(obj_p);
+    }
+}
+
 int main() {
+	
+	wdt_t obj;
+    
+	rda_wdt_init(&obj, 2);
+    rda_wdt_start(&obj);
+	rda_thread_new(NULL, feed_dog_thread, (void *)&obj, 1024,osPriorityRealtime);
 	
 	//heapinfo_thread.start(print_heap_info);
 	printf("================================serial             test===================================\r\n");
@@ -850,7 +933,7 @@ int main() {
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================cjson              test===================================\r\n");
-	cjson_test();
+	//cjson_test();
 	printf("================================            end        ===================================\r\n");
 	
 	printf("================================flash user data rw test===================================\r\n");
@@ -886,11 +969,10 @@ int main() {
 	printf("================================            end        ===================================\r\n");
 
 	printf("************************************** start ************************************************\r\n");
-
-test_serial();
-
+	test_serial();
+	//发现当串口中断在扫描wifi的时候发生就会导致hard flat
 	//it will connect wifi frist read wifi info from flash and connect this wifi,it will connect w3 if connect error which ssid read from the flash
-	char ssid[32];
+	/* char ssid[32];
 	char passwd[64];
 	int wifi_ret;
 	int r_flash_ret = rda5981_flash_read_sta_data(ssid, passwd);
@@ -902,14 +984,16 @@ test_serial();
 	}
 	if(wifi_ret != 0){
 		scanNconnect_wifi();
-	}
+	} */
 	//start deal come code rev from uart
 	
 	printf("************************************************          end        ************************************************\r\n");
 
+
     while (true) {
 		//loop
-		
+		printf("main loop\r\n");
+		Thread::wait(1500);
         
     }
 }
