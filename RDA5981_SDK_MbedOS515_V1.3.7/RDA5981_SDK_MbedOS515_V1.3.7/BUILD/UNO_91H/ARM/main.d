@@ -132,13 +132,13 @@
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip-wifi/arch/TARGET_RDA/TARGET_UNO_91H/inc/rda_sys_wrapper.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip_stack.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/netsocket/emac_api.h
+.\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/at.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./hal/targets/hal/TARGET_RDA/TARGET_UNO_91H/rda_wdt_api.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./hal/targets/hal/TARGET_RDA/TARGET_UNO_91H/rda_ccfg_api.h
 .\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/cJSON.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/api.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/netbuf.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/sys.h
-.\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/http.h
 .\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/RC4_Encrypt.h
 .\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/console_cfunc.h
 .\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/b64.h

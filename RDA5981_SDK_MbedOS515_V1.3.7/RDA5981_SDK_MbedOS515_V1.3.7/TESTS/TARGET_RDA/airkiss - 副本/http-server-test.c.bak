@@ -1,0 +1,312 @@
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <time.h>
+#include <math.h>
+
+#define SERVER_PORT 2336
+
+/* HTTP/1.0 200 OK */
+static const unsigned char http_200ok[] = {
+		0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x30, 0x20, 0x32, 0x30, 0x30,
+		0x20, 0x4f, 0x4b, 0x0d, 0x0a
+};
+static const unsigned int http_200ok_len = 17;
+
+/* HTTP/1.0 404 File not found */
+static const unsigned char http_404fnf[] = {
+		0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x30, 0x20, 0x34, 0x30, 0x34,
+		0x20, 0x46, 0x69, 0x6c, 0x65, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x66, 0x6f,
+		0x75, 0x6e, 0x64, 0x0d, 0x0a
+};
+static const unsigned int http_404fnf_len = 29;
+
+/* Server: edyht - based on lwIP 1.4.1 */
+static const unsigned char http_server[] = {
+		0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x3a, 0x20, 0x65, 0x64, 0x79, 0x68,
+		0x74, 0x20, 0x2d, 0x20, 0x62, 0x61, 0x73, 0x65, 0x64, 0x20, 0x6f, 0x6e,
+		0x20, 0x6c, 0x77, 0x49, 0x50, 0x20, 0x31, 0x2e, 0x34, 0x2e, 0x31, 0x0d,
+		0x0a
+};
+static unsigned int http_server_len = 37;
+
+/* "Content-type: text/html */
+static const unsigned char http_content_html[] = {
+		0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2d, 0x74, 0x79, 0x70, 0x65,
+		0x3a, 0x20, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x68, 0x74, 0x6d, 0x6c, 0x0d,
+		0x0a, 0x0d, 0x0a
+};
+static const unsigned int http_content_html_len = 27;
+
+#define ENTRY_LEN   120
+#define LIST_LEN    5
+
+typedef struct {
+	char name[ENTRY_LEN+1]; //leave one more element for terminating "0"
+	char value[ENTRY_LEN+1]; //leave one more element for terminating "0"
+} nameVal_t;
+
+static char filename[ENTRY_LEN+1]; //leave one more element for terminating "0"
+static nameVal_t queryList[LIST_LEN];
+
+
+static enum {
+	urlState_GET,
+	urlState_filename,
+	urlState_queryName,
+	urlState_queryVal,
+} urlState;
+
+
+static int cntChar;
+static int cntElements;  //0 means only filename, otherwise no of query elements
+static inline void charProcessInit(void){
+	cntChar = 0;
+	cntElements = 0;
+	urlState = urlState_GET;
+}
+
+#define CHARPROC_OK             0
+#define CHARPROC_FINISHED       1
+#define CHARPROC_ERR_REQUEST   -1
+#define CHARPROC_ERR_OWFL      -2
+#define CHARPROC_ERR_WRONGCHAR -3
+
+static inline int charProcess(char inChar,char *filename_p,int MAX_STR_LEN,nameVal_t *queryList_p,int MAX_LIST_LEN){
+
+	const char* getStr = "GET /";
+
+	//Process only alphanumeric characters and
+	if((inChar >= 0x20) && (inChar <= 0x7e))
+
+		switch(urlState){
+		case urlState_GET:
+			if(inChar != getStr[cntChar]) return CHARPROC_ERR_REQUEST;
+			cntChar++;
+			if(cntChar == 5){
+				cntChar = 0;
+				urlState = urlState_filename;
+			}
+			break;
+
+		case urlState_filename:
+			if(inChar == ' '){
+				//Space detected -> end completely
+				//if(cntChar < ENTRY_LEN)
+				*(filename_p+cntChar) = '\0';
+				return CHARPROC_FINISHED;
+			}
+			if(inChar == '?'){
+				//Query detected -> go Query
+				//if(cntChar < ENTRY_LEN)
+				*(filename_p+cntChar) = '\0';
+				cntChar = 0;
+				urlState = urlState_queryName;
+				break;
+			}
+			if(cntChar >= MAX_STR_LEN) return CHARPROC_ERR_OWFL;
+			//todo: Maybe tolerate other chars like "_"
+			if( ((inChar >= '0') && (inChar <= '9'))
+					|| (inChar >= 'A' && inChar <= 'Z')
+					|| (inChar >= 'a' && inChar <= 'z')
+					|| (inChar == '.')){
+				*(filename_p+cntChar) = inChar;
+				cntChar++;
+				break;
+			}
+			return(CHARPROC_ERR_WRONGCHAR);
+
+		case urlState_queryName:
+			if(cntElements >= MAX_LIST_LEN) return CHARPROC_ERR_OWFL;
+			if(inChar == '='){
+				//Value detected -> go value
+				//if(cntChar < ENTRY_LEN)
+				queryList[cntElements].name[cntChar] = '\0';
+				cntChar = 0;
+				urlState = urlState_queryVal;
+				break;
+			}
+			if(cntChar >= MAX_STR_LEN) return CHARPROC_ERR_OWFL;
+			if( ((inChar >= '0') && (inChar <= '9'))
+					|| (inChar >= 'A' && inChar <= 'Z')
+					|| (inChar >= 'a' && inChar <= 'z')
+					|| (inChar == '.')
+					|| (inChar == '_' )){
+				queryList[cntElements].name[cntChar] = inChar;
+				cntChar++;
+				break;
+			}
+			return(CHARPROC_ERR_WRONGCHAR);
+
+		case urlState_queryVal:
+			if(inChar == ' '){
+				//Space detected -> end completely
+				//if(cntChar < ENTRY_LEN)
+				queryList[cntElements].value[cntChar] = '\0';
+				cntElements++;
+				return CHARPROC_FINISHED;
+			}
+			if(inChar == '&'){
+				//Next token detected -> go Name
+				//if(cntChar < ENTRY_LEN)
+				queryList[cntElements].value[cntChar] = '\0';
+				cntChar = 0;
+				cntElements++;
+				urlState = urlState_queryName;
+				break;
+			}
+			if(cntChar >= MAX_STR_LEN) return CHARPROC_ERR_OWFL;
+			//todo: Maybe tolerate other chars like "_"
+			if( ((inChar >= '0') && (inChar <= '9'))
+					|| (inChar >= 'A' && inChar <= 'Z')
+					|| (inChar >= 'a' && inChar <= 'z')
+					|| (inChar == '.')
+					|| (inChar == '-')){
+				queryList[cntElements].value[cntChar] = inChar;
+				cntChar++;
+				break;
+			}
+			if(inChar == '+'){
+				queryList[cntElements].value[cntChar] = ' ';
+				cntChar++;
+				break;
+			}
+			return(CHARPROC_ERR_WRONGCHAR);
+		}
+
+	return(CHARPROC_OK);
+}
+
+static inline void webpageProcess(int client){
+
+    
+
+	if((strncmp(filename, "", ENTRY_LEN) == 0) || (strncmp(filename, "index.htm", ENTRY_LEN) == 0))
+	{
+        send(client, http_200ok, http_200ok_len, 0);
+        send(client, http_server, http_server_len, 0);
+        send(client, http_content_html, http_content_html_len, 0);
+        send(client, "index", sizeof("index"), 0);
+	}
+	else
+	{
+		/* Show error page */
+        send(client, http_404fnf, http_404fnf_len, 0);
+        send(client, http_server, http_server_len, 0);
+        send(client, http_content_html, http_content_html_len, 0);
+        send(client, "404", sizeof("404"), 0);
+	}
+
+    int i;
+	for(i=0;i<cntElements;i++){
+		//Decode value for query string element "1234.3"
+		printf("name %s,value %s\r\n",queryList[i].name,queryList[i].value);
+
+	}
+
+}
+
+int main()
+{
+	int serverSocket;
+	struct sockaddr_in server_addr;
+	struct sockaddr_in clientAddr;
+	int addr_len = sizeof(clientAddr);
+	int client;
+	char buffer[200];
+	int iDataNum;
+	if((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	{
+		perror("socket");
+		return 1;
+	}
+
+
+	bzero(&server_addr, sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(SERVER_PORT);
+	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if(bind(serverSocket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+	{
+		perror("connect");
+		return 1;
+	}
+	if(listen(serverSocket, 5) < 0) 
+	{
+		perror("listen");
+		return 1;
+	}
+
+	while(1)
+	{
+		printf("Listening on port: %d\n", SERVER_PORT);
+        WaitNextClient:
+		client = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t*)&addr_len);
+		if(client < 0)
+		{
+			perror("accept");
+			continue;
+		}
+        charProcessInit();
+		printf("\nrecv client data...n");
+		printf("IP is %s\n", inet_ntoa(clientAddr.sin_addr));
+		printf("Port is %d\n", htons(clientAddr.sin_port));
+		while(1)
+		{
+        
+			iDataNum = recv(client, buffer, 1024, 0);
+			if(iDataNum < 0)
+			{
+				perror("recv");
+				continue;
+			}
+			else if(iDataNum == 0){
+			  printf("kick off!");
+			  break;
+			}
+			//buffer[iDataNum] = '\0';
+			int i;
+            //process data byte by byte
+            for(i=0; i<iDataNum; i++){
+
+                int ret = charProcess(buffer[i],&filename,ENTRY_LEN,&queryList,LIST_LEN);
+
+                if(ret < 0) {
+                    //Error!
+                    //todo: Also Process Webpage (with error code)
+                    printf("error:%d\r\n",ret);
+                    close(client);
+                    goto WaitNextClient;
+                    
+                    break;
+                };
+
+                if(ret == 1){
+                    //Process Webpage
+                    webpageProcess(client);
+                    close(client);
+                    goto WaitNextClient;
+                    //Exit regularly
+                    break;
+                }
+
+            }
+			printf("\r\nrecv_data len: %d, recv data:s %s\n", iDataNum, buffer);
+			//send(client, buffer, iDataNum, 0);
+		}
+	}
+	return 0;
+
+}

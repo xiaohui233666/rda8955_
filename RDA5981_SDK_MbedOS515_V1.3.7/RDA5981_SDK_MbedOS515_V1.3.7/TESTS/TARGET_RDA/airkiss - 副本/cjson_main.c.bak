@@ -1,0 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "cJSON.h"
+
+int main()
+{
+	cJSON *root = NULL;
+	char *out = NULL;
+	root = cJSON_CreateObject();
+	cJSON_AddItemToObject(root, "name", cJSON_CreateString("Jack (\"Bee\") Nimble"));
+	out=cJSON_Print(root);
+	printf("json_str:%s\r\n",out);
+	free(out);
+	cJSON_Delete(root);
+
+	root = cJSON_Parse("{\"name\":	\"testname\"}");
+	out = cJSON_Print(root);
+	printf("json_str_analyze:%s\r\n",out);
+	free(out);
+	cJSON_Delete(root);
+	
+
+}
