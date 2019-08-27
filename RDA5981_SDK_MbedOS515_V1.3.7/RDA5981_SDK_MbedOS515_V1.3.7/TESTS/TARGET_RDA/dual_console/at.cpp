@@ -9,7 +9,6 @@
 #include "cmsis_os.h"
 #include "gpadckey.h"
 #include "at.h"
-#include "ping/ping.h"
 #include "smart_config.h"
 #include "inet.h"
 #include "lwip/api.h"
@@ -486,44 +485,6 @@ int do_nlink(cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
                 rda_socket[i].SERVER_PORT, rda_socket[i].LOCAL_PORT);
     }
 
-    return 0;
-}
-
-extern unsigned char ping_console_idx;
-int do_nping(cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
-{
-    int count, interval, len, echo_level;
-
-    if (argc < 6) {
-        AT_RESP_ERROR(idx, ERROR_ARG);
-        return 0;
-    }
-
-    count = atoi(argv[2]);
-    interval = atoi(argv[3]);
-    len = atoi(argv[4]);
-    echo_level = atoi(argv[5]);
-    if (count < 0 || interval < 0 || len < 0) {
-        AT_RESP_ERROR(idx, ERROR_ARG);
-        return 0;
-    }
-    if (interval < 1 )
-        interval = 1000; // s -> ms
-    else if (interval > 10)
-        interval = 10 * 1000; // s -> ms
-    else
-        interval *= 1000; // s -> ms
-
-    if (len > 14600)
-        len = 14600;
-
-    if (echo_level > 0)
-        echo_level = 1;
-    else
-        echo_level = 0;
-
-    ping_console_idx = idx;
-    ping_init((const char*)argv[1], count, interval, len, echo_level);
     return 0;
 }
 
@@ -1273,10 +1234,6 @@ void add_cmd()
         {
             "AT+NLINK",         1,   do_nlink,
             "AT+NLINK           - check tcp/udp client status"
-        },
-        {
-            "AT+NPING",         6,   do_nping,
-            "AT+NPING           - do ping"
         },
         {
             "AT+NDNS",          2,   do_ndns,
