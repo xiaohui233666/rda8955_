@@ -64,13 +64,14 @@ void *wifi_main_msgQ;
 
 
 rda_console_t p_rda_console;
-rtos::Mutex fifo_lock;
+rtos::Mutex uart_print_lock;
 
 void tzset(void);
 WiFiStackInterface wifi;
 UDPSocket udpsocket;
 //#define core_util_critical_section_enter_def() fifo_lock.lock()
 //#define core_util_critical_section_exit_def() fifo_lock.unlock()
+
 #define core_util_critical_section_enter_def() 
 //core_util_critical_section_enter()
 #define core_util_critical_section_exit_def() 
@@ -107,7 +108,7 @@ typedef struct
   } ntp_packet;              // Total: 384 bits or 48 bytes.
 #define NTP_TIMESTAMP_DELTA 2208988800ull
 
-char* host_name = "time.windows.com";
+char* host_name = "time1.aliyun.com";
 
 //fifo////////////////////////////////////////////////////////////////////////////////////////////////////
 int NodeLen;
@@ -138,7 +139,7 @@ __STATIC_INLINE unsigned char GetEleDbLinkList(pNODE pHead, int pos);
 
 void FreeMemory(pNODE *ppHead);
 
-static NODE UART_REVBUF[2048];
+static NODE UART_REVBUF[1324];
 
 pNODE CreateDbLinkList(int BufSize)
 {
@@ -346,10 +347,13 @@ void Print(char *s){
 		serial_putc(&stdio_uart, *s++);
 }
 char buffer[80];
-int do_ntp(void){
+
+void do_ntp(void * arg){
 	long rLen=0;
-	if(wifi.get_ip_address() == NULL)
+	if(wifi.get_ip_address() == NULL){
+		response("AT+TIME","","net starus error");
 		return;
+	}
 	// Create and zero out the packet. All 48 bytes worth.
 	ntp_packet packet = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	memset( &packet, 0, sizeof( ntp_packet ) );
@@ -359,50 +363,49 @@ int do_ntp(void){
 	ip_addr_t server;
 	int ret = netconn_gethostbyname(host_name, &server);
 	if(ret != 0){
-		response("AT+Time","","dns error");
-		return 0;
+		response("AT+TIME","","dns error");
+		return;
 	}
-
 	SocketAddress addr(inet_ntoa(server), 123);
 	if (!addr) {
-		response("AT+Time","","address error");
-		return 0;
+		response("AT+TIME","","address error");
+		return;
 	}
 	
-	udpsocket.open(&wifi);
-	udpsocket.bind(0);
+	
 	rLen = udpsocket.sendto(inet_ntoa(server), 123, ( char* ) &packet, sizeof( ntp_packet ));
 	rLen = udpsocket.recvfrom(&addr,( void* ) &packet, sizeof( ntp_packet ));
 	//printf("recv %d Bytes \n", rLen);
-	if (rLen <= 0) {
+	if (rLen < sizeof( ntp_packet )) {
 		//printf("ERROR: UDP recv error, len is %d £¡\r\n", rLen);
-		response("AT+Time","","rev error");
-		return 0;
+		response("AT+TIME","","rev error");
+		return;
 	}
 	
-	//struct _reent reent;
-	//_putenv_r(&reent,"TZ=PST8PDT");
-	//setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 3);
-	//_tzset_r(&reent);
+/* 	struct _reent reent;
+	_putenv_r(&reent,"TZ=PST8PDT");
+	setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 3);
+	_tzset_r(&reent); */
 	
 	packet.txTm_s = ntohl( packet.txTm_s ); // Time-stamp seconds.
 	packet.txTm_f = ntohl( packet.txTm_f ); // Time-stamp fraction of a second.
 	time_t txTm = ( time_t ) ( packet.txTm_s - NTP_TIMESTAMP_DELTA );
 	struct tm *info;
 	
-	udpsocket.close();
+	//udpsocket.close();
 	info = localtime(&txTm);
 	info->tm_hour += 8;
 	memset(buffer,0,sizeof(buffer));
 	strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", info);
-	response("AT+Time",buffer,"");
+	response("AT+TIME",buffer,"");
 	//RESP_OK();
 	//printf("\tNTP timestamp is %s", ctime(&txTm));
 	//printf("udp recv test end \r\n");
 }
 
 void response(char *cmd,char *dat,char *err){
-	Print((char *)'<');
+	uart_print_lock.lock();
+	Print((char *)"<");
 	cJSON *root = NULL;
 	char *out = NULL;
 	unsigned int TmpLen = 0;
@@ -422,21 +425,27 @@ void response(char *cmd,char *dat,char *err){
 	while(*TmpStrP){
 		if(TmpDataCrc < 0xff)
 			TmpDataCrc+=*TmpStrP;
-		serial_putc(&stdio_uart,*TmpStrP);
+		serial_putc(&stdio_uart,*TmpStrP++);
 	}
 	free(out);
 	cJSON_Delete(root);
 	serial_putc(&stdio_uart,(char)(TmpDataCrc&0xff));
-	Print((char *)'>');
+	Print((char *)">");
+	uart_print_lock.unlock();
 }
-
+void * Ntp_thread;
 int do_at_ntp(cmd_tbl_t *cmd, int argc, char *argv[]){
 	//printf("argc:%d argv:%s\r\n",argc,argv[1]);
-	do_ntp();
+	if(Ntp_thread != NULL){
+		osThreadTerminate((osThreadId)(Ntp_thread));
+		//free(Ntp_thread);
+	}
+	Ntp_thread = rda_thread_new(NULL, do_ntp, (void *)NULL, 1024,osPriorityNormal);
+	response("AT+Time","","return");
 	return 0;
 }
 
-unsigned char json_buf[600];
+unsigned char json_buf[900];
 
 /* void deal_searial_input(const void *arg){
 	while(1){
@@ -456,6 +465,7 @@ static void console_irq_handler(uint32_t id, SerialIrq event)
 		InsertEleDbLinkList(head, GetLengthDbLinkList(head)+1, tmp_uart_char);
 		//printf("read_c:%c\r\n",tmp_uart_char);
 		Print("read\r\n");
+		//serial_putc(&stdio_uart, tmp_uart_char);
         //serial.putc(serial.getc());
     }
 	//NodeLen+=TmpLen;
@@ -475,6 +485,9 @@ void feed_dog_thread(void *arg){
 
 cJSON *root = NULL;
 char *out = NULL;
+extern int do_nstart(int index,char *IP,char *port);
+extern int do_nstop(int index);
+extern int do_nsend(int index,unsigned char *buf,int total_len);
 inline void analyze_json(unsigned char *str){
 	
 	root = cJSON_CreateObject();
@@ -484,52 +497,88 @@ inline void analyze_json(unsigned char *str){
 	
 	cJSON *Type = cJSON_GetObjectItem(root,"type");
 	Print("type:");Print(Type->valuestring);Print("\r\n");
-	if(strcmp(Type->valuestring,"tcp0")==0){
+	if(strcmp(Type->valuestring,"tcp0+start")==0){
 	
 		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
 		Print("Ip:");Print(Ip->valuestring);Print("\r\n");
 		
 		cJSON *Port = cJSON_GetObjectItem(root,"Port");
 		Print("Port:");Print(Port->valuestring);Print("\r\n");
-		
-		cJSON *Data = cJSON_GetObjectItem(root,"Data");
-		Print("Data:");Print(Data->valuestring);Print("\r\n");
+		do_nstart(0,Ip->valuestring,Port->valuestring);
 		//socket tcp? short? or long?
 		
-	}else if(strcmp(Type->valuestring,"tcp1")==0){
-	
-		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
-		Print("Ip:");Print(Ip->valuestring);Print("\r\n");
+	}else if(strcmp(Type->valuestring,"tcp0+send")==0){
 		
-		cJSON *Port = cJSON_GetObjectItem(root,"Port");
-		Print("Port:");Print(Port->valuestring);Print("\r\n");
-		
-		cJSON *Data = cJSON_GetObjectItem(root,"Data");
-		Print("Data:");Print(Data->valuestring);Print("\r\n");
+		cJSON *buf = cJSON_GetObjectItem(root,"Buf");
+		Print("buf:");Print(buf->valuestring);Print("\r\n");
+		do_nsend(0,(unsigned char *)(buf->valuestring),strlen(buf->valuestring));
 		//socket tcp? short? or long?
 		
-	}else if(strcmp(Type->valuestring,"tcp2")==0){
-	
-		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
-		Print("Ip:");Print(Ip->valuestring);Print("\r\n");
-		
-		cJSON *Port = cJSON_GetObjectItem(root,"Port");
-		Print("Port:");Print(Port->valuestring);Print("\r\n");
-		
-		cJSON *Data = cJSON_GetObjectItem(root,"Data");
-		Print("Data:");Print(Data->valuestring);Print("\r\n");
+	}else if(strcmp(Type->valuestring,"tcp0+stop")==0){
+		do_nstop(0);
 		//socket tcp? short? or long?
 		
-	}else if(strcmp(Type->valuestring,"tcp2")==0){
+	}else if(strcmp(Type->valuestring,"tcp1+start")==0){
 	
 		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
 		Print("Ip:");Print(Ip->valuestring);Print("\r\n");
 		
 		cJSON *Port = cJSON_GetObjectItem(root,"Port");
 		Print("Port:");Print(Port->valuestring);Print("\r\n");
+		do_nstart(1,Ip->valuestring,Port->valuestring);
+		//socket tcp? short? or long?
 		
-		cJSON *Data = cJSON_GetObjectItem(root,"Data");
-		Print("Data:");Print(Data->valuestring);Print("\r\n");
+	}else if(strcmp(Type->valuestring,"tcp1+send")==0){
+		
+		cJSON *buf = cJSON_GetObjectItem(root,"Buf");
+		Print("buf:");Print(buf->valuestring);Print("\r\n");
+		do_nsend(1,(unsigned char *)(buf->valuestring),strlen(buf->valuestring));
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp1+stop")==0){
+		do_nstop(1);
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp2+start")==0){
+	
+		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
+		Print("Ip:");Print(Ip->valuestring);Print("\r\n");
+		
+		cJSON *Port = cJSON_GetObjectItem(root,"Port");
+		Print("Port:");Print(Port->valuestring);Print("\r\n");
+		do_nstart(2,Ip->valuestring,Port->valuestring);
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp2+send")==0){
+		
+		cJSON *buf = cJSON_GetObjectItem(root,"Buf");
+		Print("buf:");Print(buf->valuestring);Print("\r\n");
+		do_nsend(2,(unsigned char *)(buf->valuestring),strlen(buf->valuestring));
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp2+stop")==0){
+		do_nstop(2);
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp3+start")==0){
+	
+		cJSON *Ip = cJSON_GetObjectItem(root,"Ip");
+		Print("Ip:");Print(Ip->valuestring);Print("\r\n");
+		
+		cJSON *Port = cJSON_GetObjectItem(root,"Port");
+		Print("Port:");Print(Port->valuestring);Print("\r\n");
+		do_nstart(3,Ip->valuestring,Port->valuestring);
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp3+send")==0){
+		
+		cJSON *buf = cJSON_GetObjectItem(root,"Buf");
+		Print("buf:");Print(buf->valuestring);Print("\r\n");
+		do_nsend(3,(unsigned char *)(buf->valuestring),strlen(buf->valuestring));
+		//socket tcp? short? or long?
+		
+	}else if(strcmp(Type->valuestring,"tcp3+stop")==0){
+		do_nstop(3);
 		//socket tcp? short? or long?
 		
 	}else if(strcmp(Type->valuestring,"at")==0){
@@ -558,7 +607,7 @@ void deal_searial_input(const void *arg){
 		tmp_pkg_len = 0;
 	
 		//wait hdr
-		//printf("wait hdr\r\n");
+		Print("wait hdr\r\n");
 		while(1){
 			while(tmp_pos > GetLengthDbLinkList(head));//{printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 			//printf("read_fifo:%c[%x,%d]\r\n",GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos),GetEleDbLinkList(head, tmp_pos));
@@ -569,7 +618,7 @@ void deal_searial_input(const void *arg){
 			DeleteEleDbLinkList(head,tmp_pos);
 		}
 		//wait pkg len
-		//printf("wait pkg len\r\n");
+		Print("wait pkg len\r\n");
 		while(GetLengthDbLinkList(head) < tmp_pos);//{printf("cur buf len:%d\r\n",GetLengthDbLinkList(head));}
 		tmp_pkg_len = GetEleDbLinkList(head, tmp_pos);
 		tmp_check = GetEleDbLinkList(head, tmp_pos);
@@ -584,6 +633,7 @@ void deal_searial_input(const void *arg){
 		
 		
 		//rev len crc
+		Print("rev len crc :\r\n");
 		//printf("rev len crc : %x\r\n",tmp_check);
 		unsigned char len_crc_check;
 		tmp_pos++;
@@ -601,14 +651,21 @@ void deal_searial_input(const void *arg){
 		
 		tmp_pkg_len_i = tmp_pkg_len;
 		tmp_Dat_pos = tmp_pos + 1;
+		Print("rev data :\r\n");
 		//rev data
+		char len_str[30];
+		memset(len_str,0,30);
+		sprintf(len_str,"len:%d\r\n",tmp_pkg_len);Print(len_str);
 		//printf("rev data tmp_pkg_len_i:%d\r\n",tmp_pkg_len_i);
 		while(tmp_pkg_len_i--){
 			tmp_pos++;
 			while(GetLengthDbLinkList(head) < tmp_pos);
 			tmp_check += GetEleDbLinkList(head, tmp_pos);
+			memset(len_str,0,30);
+			sprintf(len_str,"rev data[%d]=%c\r\n",tmp_pos,GetEleDbLinkList(head, tmp_pos));Print(len_str);
 			//printf("rev data[%d]=%c\r\n",tmp_pos,GetEleDbLinkList(head, tmp_pos));
 		}
+		Print("rev crc :\r\n");
 		//rev crc
 		//printf("rev crc : %x\r\n",tmp_check);
 		unsigned char check;
@@ -624,7 +681,7 @@ void deal_searial_input(const void *arg){
 			tmp_pos = 1;
 			continue;
 		}
-		
+		Print("rev end :\r\n");
 		//check crc
 		//printf("check crc check:%d,tmp_check:%d\r\n",check,tmp_check);
 		if(check == tmp_check){
@@ -668,7 +725,7 @@ int main() {
     
 	rda_wdt_init(&obj, 2);
     rda_wdt_start(&obj);
-	rda_thread_new(NULL, feed_dog_thread, (void *)&obj, 1024,osPriorityNormal);
+	rda_thread_new(NULL, feed_dog_thread, (void *)&obj, 100,osPriorityNormal);
 	serial_init(&stdio_uart, UART0_TX, UART0_RX);
 	
     serial_baud(&stdio_uart,115200);
@@ -676,14 +733,15 @@ int main() {
  	wifi_main_msgQ = rda_msgQ_create(5);
 	wifi.set_msg_queue(wifi_main_msgQ);
 	printf("************************************************          start        ************************************************\r\n");
-	Print("start");
-/* 	int test_wifi_ret = wifi.connect("xiaohui", "qwertyui", NULL, NSAPI_SECURITY_NONE);//"ChaoMeng_03F", "cm88889999"
+/* 	Print("start");
+	int test_wifi_ret = wifi.connect("xiaohui", "qwertyui", NULL, NSAPI_SECURITY_NONE);//"ChaoMeng_03F", "cm88889999"
     if (test_wifi_ret==0) {
         printf("connect to success, ip %s\r\n", wifi.get_ip_address());
     } else {
         printf("connect to fail\r\n");
     } */
-	
+	//udpsocket.open(&wifi);
+	//udpsocket.bind(0);
 	test_serial();
 	//发现当串口中断在扫描wifi的时候发生就会导致hard flat
 	//it will connect wifi frist read wifi info from flash and connect this wifi,it will connect w3 if connect error which ssid read from the flash
@@ -710,10 +768,10 @@ int main() {
         switch(msg)
         {
             case MAIN_RECONNECT:
-                //printf("wifi disconnect!\r\n");
+                Print("wifi disconnect!\r\n");
                 ret = wifi.disconnect();
                 if(ret != 0){
-                    //printf("disconnect failed!\r\n");
+                    Print("disconnect failed!\r\n");
                     break;
                 }
                 ret = wifi.reconnect();
@@ -729,7 +787,7 @@ int main() {
                 wifi.stop_ap(1);
                 break;
             default:
-                //printf("unknown msg\r\n");
+                Print("unknown msg\r\n");
                 break;
         }
     }

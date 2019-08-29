@@ -34,57 +34,53 @@
 #define AT_RESP_OK
 #define AT_RESP_OK_EQU
 #define AT_RESP_ERROR
-
+extern UDPSocket udpsocket;
 extern void response(char *cmd,char *dat,char *err);
 
+static char trans_index = 0xff;
 static char ssid[32+1];
 static char pw[64+1];
 static char conn_flag = 0;
 static char ap_flag = 0;
 extern unsigned char rda_mac_addr[6];
 extern WiFiStackInterface wifi;
-int conn(char *ssid, char *pw)
-{
-    int ret;
-    const char *ip_addr;
-    unsigned int ip, msk, gw;
-    char ips[IP_LENGTH], msks[IP_LENGTH], gws[IP_LENGTH];
 
-    ret = wifi.connect(ssid, pw, NULL, NSAPI_SECURITY_NONE, 0);
-    if(ret != 0){
-        //RESP_ERROR(ERROR_FAILE);
-        return -1;
-    }
+typedef enum{
+    TCP,
+}socket_type_t;
+typedef struct{
+    void *socket;
+    int type;
+    char SERVER_ADDR[20];
+    int SERVER_PORT;
+    int LOCAL_PORT; //used for UDP
+    int used;
+    SocketAddress address;
+    void *threadid;
+}rda_socket_t;
+static rda_socket_t rda_socket[SOCKET_NUM];
 
-    ip_addr = wifi.get_ip_address();
-
-    if (ip_addr) {
-        RDA_AT_PRINT("Client IP Address is %s\r\n", ip_addr);
-        conn_flag = 1;
-        return 0;
-    } else {
-        RDA_AT_PRINT("No Client IP Address\r\n");
-        return -1;
-    }
-}
-int do_wsmac( cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
+int do_wsmac( cmd_tbl_t *cmd, int argc, char *argv[])
 {
     char *mdata, mac[6], i;
-
+	char TmpStr[18];
     if(*argv[1] == '?'){
         rda_get_macaddr((unsigned char *)mac, 0);
-        AT_RESP_OK_EQU(idx, "%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+        sprintf(TmpStr, "%02x:%02x:%02x:%02x:%02x:%02x",
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		response("AT+WSMAC",TmpStr,"");
         return 0;
     }
 
     if(conn_flag == 1 || ap_flag == 1){
-        AT_RESP_ERROR(idx, ERROR_ABORT);
+		response("AT+WSMAC","","arg error");
+        //AT_RESP_ERROR(idx, ERROR_ABORT);
         return 0;
     }
 
     if(strlen(argv[1]) != 12){
-        AT_RESP_ERROR(idx, ERROR_ARG);
+		response("AT+WSMAC","","arg error");
+        //AT_RESP_ERROR(idx, ERROR_ARG);
         return 0;
     }
 
@@ -100,37 +96,90 @@ int do_wsmac( cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
                 mac[i/2] = mac[i-1] << 4 | mac[i];
     }
     if(!mac_is_valid(mac)){
-        AT_RESP_ERROR(idx, ERROR_ARG);
+        //AT_RESP_ERROR(idx, ERROR_ARG);
+		response("AT+WSMAC","","arg error");
         return 0;
     }
     memcpy(rda_mac_addr, mac, 6);
     rda5981_flash_write_mac_addr(rda_mac_addr);
-    AT_RESP_OK(idx);
+	response("AT+WSMAC","ok","");
+    //AT_RESP_OK(idx);
 
     return 0;
 }
-int do_wsconn( cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
+
+int conn(char *ssid, char *pw)
+{
+    int ret;
+    const char *ip_addr;
+    unsigned int enable, ip, msk, gw;
+    char ips[IP_LENGTH], msks[IP_LENGTH], gws[IP_LENGTH];
+
+/*     if(fixip_flag == 0){
+        ret = rda5981_flash_read_dhcp_data(&enable, &ip, &msk, &gw);
+        if(ret == 0 && enable == 1){
+            memcpy(ips, inet_ntoa(ip), IP_LENGTH);
+            memcpy(msks, inet_ntoa(msk), IP_LENGTH);
+            memcpy(gws, inet_ntoa(gw), IP_LENGTH);
+            wifi.set_dhcp(0);
+            wifi.set_network(ips, msks, gws);
+        }else{
+            wifi.set_dhcp(1);
+        }
+    }
+    fixip_flag = 0; */
+    ret = wifi.connect(ssid, pw, NULL, NSAPI_SECURITY_NONE, 0);
+	udpsocket.close();
+	udpsocket.open(&wifi);
+	udpsocket.bind(0);
+    if(ret != 0){
+		conn_flag = 0;
+		//response("AT+WSCONN","connect error","");
+        //RESP_ERROR(ERROR_FAILE);
+        return -1;
+    }
+
+    ip_addr = wifi.get_ip_address();
+
+    if (ip_addr) {
+		//response("AT+WSCONN","connected","");
+        //RDA_AT_PRINT("Client IP Address is %s\r\n", ip_addr);
+        conn_flag = 1;
+        return 0;
+    } else {
+		conn_flag = 0;
+		//response("AT+WSCONN","disconnect","");
+        //RDA_AT_PRINT("No Client IP Address\r\n");
+        return -1;
+    }
+}
+
+int do_wsconn( cmd_tbl_t *cmd, int argc, char *argv[])
 {
     int ret, flag;
 
     if (argc < 1) {
-        AT_RESP_ERROR(idx, ERROR_ARG);
+		response("AT+WSCONN","","arg error");
+        //AT_RESP_ERROR(idx, ERROR_ARG);
         return 0;
     }
 
     if(*argv[1] == '?'){
         if(conn_flag == 1){
-            wifi.update_rssi();
-            AT_RESP_OK_EQU(idx, "ssid:%s, RSSI:%ddb, ip:%s, BSSID: "MAC_FORMAT"\r\n", wifi.get_ssid(), wifi.get_rssi(), wifi.get_ip_address(), MAC2STR(wifi.get_BSSID()));
+			response("AT+WSCONN","connected","");
+            //wifi.update_rssi();
+            //AT_RESP_OK_EQU(idx, "ssid:%s, RSSI:%ddb, ip:%s, BSSID: "MAC_FORMAT"\r\n", wifi.get_ssid(), wifi.get_rssi(), wifi.get_ip_address(), MAC2STR(wifi.get_BSSID()));
         }else{
-            AT_RESP_OK_EQU(idx, "ssid:, RSSI:0db, ip:0.0.0.0\r\n");
+			response("AT+WSCONN","disconnect","");
+            //AT_RESP_OK_EQU(idx, "ssid:, RSSI:0db, ip:0.0.0.0\r\n");
         }
         return 0;
     }
 
     if(conn_flag == 1){
-        AT_RESP_ERROR(idx, ERROR_ABORT);
-        AT_PRINT(idx, "error! Has been connected!");
+		response("AT+WSCONN","","connected");
+        // AT_RESP_ERROR(idx, ERROR_ABORT);
+        //AT_PRINT(idx, "error! Has been connected!");
         return 0;
     }
 
@@ -151,37 +200,187 @@ int do_wsconn( cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
     if (strlen(ssid) == 0) {
         ret = rda5981_flash_read_sta_data(ssid, pw);
         if (ret == 0 && strlen(ssid)) {
-            AT_PRINT(idx, "get ssid from flash: ssid:%s, pass:%s\r\n", ssid, pw);
+            //AT_PRINT(idx, "get ssid from flash: ssid:%s, pass:%s\r\n", ssid, pw);
         }else{
-            AT_RESP_ERROR(idx, ERROR_ARG);
+			response("AT+WSCONN","wifi info is NULL","");
+            //AT_RESP_ERROR(idx, ERROR_ARG);
             return 0;
         }
     }
 
-    AT_PRINT(idx, "ssid %s pw %s\r\n", ssid, pw);
+    //AT_PRINT(idx, "ssid %s pw %s\r\n", ssid, pw);
 
     ret = conn(ssid, pw);
     if(ret == 0){
         if(flag == 1)
             rda5981_flash_write_sta_data(ssid, pw);
-        AT_RESP_OK(idx);
+		response("AT+WSCONN","ok","");
+        //AT_RESP_OK(idx);
     }else{
-        AT_RESP_ERROR(idx, ERROR_FAILE);
+		response("AT+WSCONN","","error");
+        //AT_RESP_ERROR(idx, ERROR_FAILE);
     }
     return 0;
 }
+//tcp socket///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int do_disconn( cmd_tbl_t *cmd, int argc, char *argv[], unsigned char idx)
+void do_recv_thread(void *argument)
 {
-    if(conn_flag == 0){
-        AT_RESP_ERROR(idx, ERROR_ABORT);
+    unsigned int index, size, res;
+    char recv_buf[RECV_LIMIT+1];
+    index = *(int *)argument;
+
+    // use the bit31 of index/argument to indicate which console executes this at command 
+
+    while(1){
+        if(rda_socket[index].type == TCP){
+            size = ((TCPSocket*)(rda_socket[index].socket))->recv((void *)recv_buf, RECV_LIMIT);
+            //AT_PRINT(idx, "do_recv_thread size %d\r\n", size);
+            if(size <= 0){
+                ((TCPSocket*)(rda_socket[index].socket))->close();
+                delete (TCPSocket*)(rda_socket[index].socket);
+/*                if(trans_index == index){
+                     do{
+                        TCPSocket* tcpsocket = new TCPSocket(&wifi);
+                        rda_socket[index].socket = (void *)tcpsocket;
+                        res = tcpsocket->connect(rda_socket[index].address);
+                    }while(res != 0);
+                }else{ */
+                    memset(&rda_socket[index], 0, sizeof(rda_socket_t));
+                    //AT_RESP(idx, "+LINKDOWN=%d\r\n", index);
+                    return;
+/*                 } */
+            }
+        }
+        recv_buf[size] = 0;
+		char tmp_str[9];
+		memset(tmp_str,0,sizeof(tmp_str));
+        // if(trans_index == 0xff){
+			sprintf(tmp_str,"AT+NREV%d","");
+			response(tmp_str,recv_buf,"");
+            //AT_RESP(idx, "+IPD=%d,%d,%s,%d,", index, size, rda_socket[index].SERVER_ADDR, rda_socket[index].SERVER_PORT);
+            //AT_RESP(idx, "%s\r\n",recv_buf);
+/*         }else if(trans_index == index){
+			response("AT+NREV",recv_buf,"net starus error");
+            //AT_RESP(idx, "%s\r\n",recv_buf);
+        }else {
+            continue;
+        } */
+    }
+}
+
+
+int do_nstart(int index,char *IP,char *port)
+{
+    int res;
+	if(wifi.get_ip_address() == NULL){
+		response("AT+NSTART","","net starus error");
+		return;
+	}
+    //for(index=0; index<SOCKET_NUM; index++)
+    if(rda_socket[index].used != 0){
+		response("AT+NSTART","","used");
+		return 0;
+	}
+
+    if(index == SOCKET_NUM){
+		response("AT+NSTART","","too mach connect");
+        //AT_RESP_ERROR(idx, ERROR_FAILE);
         return 0;
     }
 
-    wifi.disconnect();
-    while(wifi.get_ip_address() != NULL)
-        Thread::wait(20);
-    conn_flag = 0;
-    AT_RESP_OK(idx);
+    // add @2017.08.15 use the bit31 to indicate which console execute this command: 1 means UART1_IDX 
+    //index = index | (idx << 31);
+
+    memcpy(rda_socket[index].SERVER_ADDR, IP, strlen(IP));
+    rda_socket[index].SERVER_PORT = atoi(port);
+    //AT_PRINT(idx, "ip %s port %d\r\n", rda_socket[index].SERVER_ADDR, rda_socket[index].SERVER_PORT);
+    rda_socket[index].address = SocketAddress(rda_socket[index].SERVER_ADDR, rda_socket[index].SERVER_PORT);
+
+	TCPSocket* tcpsocket = new TCPSocket(&wifi);
+	rda_socket[index].type = TCP;
+	rda_socket[index].socket = (void *)tcpsocket;
+	res = tcpsocket->connect(rda_socket[index].address);
+	if(res != 0){
+		response("AT+NSTART","","connect error");
+		//AT_PRINT(idx, "connect failed res = %d\r\n", res);
+		//AT_RESP_ERROR(idx, ERROR_FAILE);
+		return 0;
+	}
+	
+    rda_socket[index].used = 1;
+
+    rda_socket[index].threadid = rda_thread_new(NULL, do_recv_thread, (void *)&index, 1024*4, osPriorityNormal);
+    //AT_RESP_OK_EQU(idx, "%d\r\n", index);
+	response("AT+NSTART","ok","");
     return 0;
 }
+
+int do_nsend(int index,unsigned char *buf,int total_len)
+{
+    unsigned int len, size;
+	if(wifi.get_ip_address() == NULL){
+		response("AT+NSEND","","net starus error");
+		return 0;
+	}
+    if(rda_socket[index].used != 1){
+		response("AT+NSEND","","not used");
+		return 0;
+        //AT_PRINT(idx, "Socket not in used!\r\n");
+        //AT_RESP_ERROR(idx, ERROR_ABORT);
+    }
+
+    if(total_len > SEND_LIMIT){
+		response("AT+NSEND","","data too big");
+		return 0;
+        //AT_PRINT(idx, "Send data len longger than %d!\r\n", SEND_LIMIT);
+        //AT_RESP_ERROR(idx, ERROR_ARG);
+    }
+
+/*     buf = (unsigned char *)malloc(total_len);
+    len = 0;
+
+    while(len < total_len) {
+        tmp_len = console_fifo_get(&buf[len], total_len-len, idx);
+        len += tmp_len;
+    } */
+
+    if(rda_socket[index].type == TCP){
+        size = ((TCPSocket*)(rda_socket[index].socket))->send((void *)buf, total_len);
+        //AT_PRINT(idx, "tcp send size %d\r\n", size);
+    }
+
+//    free(buf);
+    if(size == total_len){
+		response("AT+NSEND","ok","");
+        //AT_RESP_OK(idx);
+    }else{
+		response("AT+NSEND","error","");
+        //AT_RESP_ERROR(idx, ERROR_FAILE);
+	}
+	
+    return 0;
+}
+
+int do_nstop(int index)
+{
+    if(rda_socket[index].used != 1){
+		response("AT+NSEND","","not used");
+		return 0;
+        //AT_PRINT(idx, "Socket not in used!\r\n");
+        //AT_RESP_ERROR(idx, ERROR_ABORT);
+    }
+    if(rda_socket[index].type == TCP){
+        ((TCPSocket*)(rda_socket[index].socket))->close();
+    }
+    rda_socket[index].used = 0;
+    delete rda_socket[index].socket;
+    //AT_RESP_OK(idx);
+    return 0;
+	
+	
+} 
+
+
+
+

@@ -16,7 +16,7 @@
   #error "Unknown compiler"
 #endif
 #endif
-
+extern void response(char *cmd,char *dat,char *err);
 static char erase_seq[] = "\b \b";       /* erase sequence         */
 static char   tab_seq[] = "    ";        /* used to expand TABs    */
 char console_buffer[CMD_CBSIZE];
@@ -24,17 +24,29 @@ char lastcommand[CMD_CBSIZE] = { 0, };
 unsigned int echo_flag = 1;
 extern int do_at( cmd_tbl_t *cmd, int argc, char *argv[]);
 extern int do_at_ntp( cmd_tbl_t *cmd, int argc, char *argv[]);
+extern int do_wsmac( cmd_tbl_t *cmd, int argc, char *argv[]);
+extern void Print(char *s);
+extern int do_wsconn( cmd_tbl_t *cmd, int argc, char *argv[]);
 cmd_tbl_t cmd_list[CMD_LIST_COUNT] = {
 	{
 		"AT",               1,   do_at,
 		"AT                 - AT mode"
 	},
 	{
-		"AT+Time",          2,   do_at_ntp,
-		"AT+Time            - AT Time"
+		"AT+TIME",          2,   do_at_ntp,
+		"AT+TIME            - AT Time"
+	},
+	/*WIFI CMD*/
+	{
+		"AT+WSMAC",         2,   do_wsmac,
+		"AT+WSMAC           - set/get mac address"
+	},
+	{
+		"AT+WSCONN",        4,   do_wsconn,
+		"AT+WSCONN          - start wifi connect"
 	},
 };
-unsigned int cmd_cntr = 2;
+unsigned int cmd_cntr = 4;
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
 static int parse_line (char *line, char *argv[])
@@ -100,11 +112,12 @@ static cmd_tbl_t *find_cmd (const char *cmd)
 
     for (i = 0;i < (int)cmd_cntr;i++) {
         cmdtp = &cmd_list[i];
-		printf("cmd:%s cmdtp->name:%s\r\n",cmd,cmdtp->name);
+		Print("name");Print(cmdtp->name);Print("\r\n");
+		Print("cmd");Print((char *)cmd);Print("\r\n");
         if (strncmp(cmd, cmdtp->name, len) == 0) {
             if (len == strlen(cmdtp->name))
                 return cmdtp;      /* full match */
-
+			
             cmdtp_temp = cmdtp;    /* abbreviated command ? */
             n_found++;
         }
@@ -115,7 +128,6 @@ static cmd_tbl_t *find_cmd (const char *cmd)
 
     return 0;   /* not found or ambiguous command */
 }
-
 
 int run_command(char *cmd)
 {
@@ -130,14 +142,14 @@ int run_command(char *cmd)
 
     /* Look up command in command table */
     if ((cmdtp = find_cmd(argv[0])) == 0) {
-        printf("command %s no found\r\n",argv[0]);
-        RESP_ERROR(ERROR_CMD);
+        //printf("command %s no found\r\n",argv[0]);
+        //RESP_ERROR(ERROR_CMD);
         return -1;
     }
 
     /* found - check max args */
     if (argc > cmdtp->maxargs) {
-        RESP_ERROR(ERROR_ARG);
+        //RESP_ERROR(ERROR_ARG);
         return -1;
     }
 
