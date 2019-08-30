@@ -47,9 +47,12 @@ a = "{\"type\":\"at\",\"Code\":\"AT+TIME\"}"
 a = "{\"type\":\"at\",\"Code\":\"AT+WSMAC=?\"}"
 a = "{\"type\":\"at\",\"Code\":\"AT+WSCONN=?\"}"
 a = "{\"type\":\"at\",\"Code\":\"AT+WSCONN=0,\\\"xiaohui\\\",\\\"qwertyui\\\"\"}"
+
 --a = "{\"type\":\"tcp0+start\",\"Ip\":\"88.99.213.221\",\"Port\":\"80\"}"
 local header = "GET //www.lua.org HTTP/1.1\r\nContent-Length: 0\r\nConnection: Keep-alive\r\nAccept: */*\r\nAccept-Language: zh-CN,zh,cn\r\nHost: http:\r\nUser-Agent: Mozilla/4.0\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n"
 a = "{\"type\":\"tcp0+send\",\"buf\":\""..header.."\"}"
+a = "{\"type\":\"tcp0+stop\",\"buf\":\""..header.."\"}"
+--a = "{\"type\":\"at\",\"Code\":\"AT+WSCONN=0,\\\"xiaohui\\\",\\\"qwertyui\\\"\"}"
 local tmp_res = ""
 local res = string.format("%02x",string.byte("<"))
 local str_len = string.len(a)
@@ -79,6 +82,8 @@ print(string.format("%02x",crc&255)..string.format("%02x",string.byte(">")))
 print(a)
 print("the length of res str is "..string.len(res))
 print(res)
+
+
 
 print(request("GET", "http://www.lua.org", 10000,"", nil, nil))
 

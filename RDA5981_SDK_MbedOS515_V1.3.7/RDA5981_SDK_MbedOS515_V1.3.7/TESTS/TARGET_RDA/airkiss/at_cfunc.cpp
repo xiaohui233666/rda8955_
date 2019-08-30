@@ -229,9 +229,12 @@ void do_recv_thread(void *argument)
     unsigned int index, size, res;
     char recv_buf[RECV_LIMIT+1];
     index = *(int *)argument;
-
+	free(argument);
+	char tmp_str[9];
     // use the bit31 of index/argument to indicate which console executes this at command 
-
+	memset(tmp_str,0,sizeof(tmp_str));
+	sprintf(tmp_str,"do_recv_thread%d",index);
+	response(tmp_str,"","");
     while(1){
         if(rda_socket[index].type == TCP){
             size = ((TCPSocket*)(rda_socket[index].socket))->recv((void *)recv_buf, RECV_LIMIT);
@@ -253,10 +256,10 @@ void do_recv_thread(void *argument)
             }
         }
         recv_buf[size] = 0;
-		char tmp_str[9];
+		
 		memset(tmp_str,0,sizeof(tmp_str));
         // if(trans_index == 0xff){
-			sprintf(tmp_str,"AT+NREV%d","");
+			sprintf(tmp_str,"AT+NREV%d",index);
 			response(tmp_str,recv_buf,"");
             //AT_RESP(idx, "+IPD=%d,%d,%s,%d,", index, size, rda_socket[index].SERVER_ADDR, rda_socket[index].SERVER_PORT);
             //AT_RESP(idx, "%s\r\n",recv_buf);
@@ -273,6 +276,9 @@ void do_recv_thread(void *argument)
 int do_nstart(int index,char *IP,char *port)
 {
     int res;
+	int *tmp_index;
+	tmp_index = (int *)malloc(sizeof(int));
+	*tmp_index = index;
 	if(wifi.get_ip_address() == NULL){
 		response("AT+NSTART","","net starus error");
 		return;
@@ -310,7 +316,7 @@ int do_nstart(int index,char *IP,char *port)
 	
     rda_socket[index].used = 1;
 
-    rda_socket[index].threadid = rda_thread_new(NULL, do_recv_thread, (void *)&index, 1024*4, osPriorityNormal);
+    rda_socket[index].threadid = rda_thread_new(NULL, do_recv_thread, (void *)tmp_index, 1024*4, osPriorityNormal);
     //AT_RESP_OK_EQU(idx, "%d\r\n", index);
 	response("AT+NSTART","ok","");
     return 0;
@@ -374,6 +380,9 @@ int do_nstop(int index)
         ((TCPSocket*)(rda_socket[index].socket))->close();
     }
     rda_socket[index].used = 0;
+	if(rda_socket[index].threadid != NULL){
+		osThreadTerminate((osThreadId)(rda_socket[index].threadid));
+	}
     delete rda_socket[index].socket;
     //AT_RESP_OK(idx);
     return 0;
