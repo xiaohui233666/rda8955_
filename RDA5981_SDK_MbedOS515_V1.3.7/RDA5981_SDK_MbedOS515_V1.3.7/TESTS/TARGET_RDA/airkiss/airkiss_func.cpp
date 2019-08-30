@@ -5,19 +5,11 @@
 #include "rda5981_sniffer.h"
 #include "airkiss.h"
 #include "gpadckey.h"
-
-WiFiStackInterface airkiss_wifi;
-
-void test_wifi(void){
-    int ret;
-//ret = wifi.connect(ssid, passwd, NULL, NSAPI_SECURITY_NONE);
-	ret = airkiss_wifi.connect("Bee-WiFi(2.4G)", "Beephone", NULL, NSAPI_SECURITY_NONE);
-    if (ret==0) {
-        printf("connect to %s success, ip %s\r\n", "Bee-WiFi(2.4G)", airkiss_wifi.get_ip_address());
-    } else {
-        printf("connect to %s fail\r\n", "Bee-WiFi(2.4G)");
-    }
-}
+#include "cmsis_os.h"
+#include "rda_sys_wrapper.h"
+extern void response(char *cmd,char *dat,char *err);
+extern WiFiStackInterface wifi;
+void airkiss_start(void *arg);
 
 char ssid[32];
 char passwd[64];
@@ -25,20 +17,24 @@ uint8_t random;
 Semaphore airkiss_done(0);
 
 /* airkiss reset */
-GpadcKey airkiss_reset_key(KEY_A5);
+InterruptIn airkiss_reset_key(PC_0);
 Timer airkiss_reset_timer;
 unsigned int falltime;
 void airkiss_reset_irq_fall()
 {
+	response("airkiss_reset_irq_fall","","");
     airkiss_reset_timer.start();
     falltime = airkiss_reset_timer.read_ms();
 }
 void airkiss_reset_irq_rise()
 {
+	void *airkiss_thread = rda_thread_new(NULL, airkiss_start, (void *)NULL, 1024,osPriorityNormal);
+	response("airkiss_reset_irq_rise","","");
     unsigned int time_now = airkiss_reset_timer.read_ms();
     if((time_now - falltime) > 3000) {   //about 5s
         printf("clear ssid saved in flash\r\n");
-        rda5981_flash_erase_sta_data();         //long press for recording
+        //rda5981_flash_erase_sta_data();         //long press for recording
+		//void *airkiss_thread = rda_thread_new(NULL, airkiss_start, (void *)NULL, 1024,osPriorityNormal);
     }
     airkiss_reset_timer.stop();
 }
@@ -95,7 +91,7 @@ static int send_rsp_to_apk(uint8_t random)
 
     printf("send response to host:%s\n", host_ip_addr);
 
-    ret = udp_socket.open(&airkiss_wifi);
+    ret = udp_socket.open(&wifi);
     if (ret) {
         printf("open socket error:%d\r\n", ret);
         return ret;
@@ -191,60 +187,32 @@ int my_smartconfig_handler(unsigned short data_len, void *data)
     return 0;
 }
 
-int airkiss_start() {
+void airkiss_start(void *arg) {
     int i;
     int ret;
     int airkiss_send_rsp = 0;
-    rda5981_scan_result scan_result[30];
-
-	memset(my_scan_channel, 0, sizeof(my_scan_channel));
-
-	ret = airkiss_wifi.start_ap("RRDD-8889", NULL ,11);
-	rda5981_apsta_info *sta_list=(rda5981_apsta_info *)malloc(sizeof(rda5981_apsta_info)*100);
-	unsigned int num;
-	num=airkiss_wifi.ap_join_info(sta_list,100);
-	printf("get_ip_address:%s\r\n",airkiss_wifi.get_ip_address());
-	printf("get_ip_address_ap:%s ,get_dhcp_start_ap: %s\r\n",airkiss_wifi.get_ip_address_ap(),airkiss_wifi.get_dhcp_start_ap());
-	printf("					joined sta num: %d\r\n",num);
-
-    ret = airkiss_wifi.scan(NULL, 0);//necessary
-    ret = airkiss_wifi.scan_result(scan_result, 30);
-    printf("scan result:%d\n", ret);
-    for(i=0; i<ret; ++i) {
-        if (scan_result[i].channel<=13) {
-            printf("i:%d, channel%d\n", i, scan_result[i].channel);
-            my_scan_channel[scan_result[i].channel] = 1;
-        }
-    }
-
+	response("airkiss_start","","");
     //rda5991h_smartlink_irq_init();
+	//printf("start airkiss, version:%s\n", airkiss_version());
+	rda5981_enable_sniffer(my_smartconfig_handler);
+	//airkiss_set_key(&akcontex, "123", 3);
+	start_airkiss();
 
-    ret = rda5981_flash_read_sta_data(ssid, passwd);
-    if (0 && (ret==0 && strlen(ssid))) {//get ssid from flash
-        printf("get ssid from flash: ssid:%s, pass:%s\r\n",
-            ssid, passwd);
-    } else {//need to smartconfig
-        printf("start airkiss, version:%s\n", airkiss_version());
-        rda5981_enable_sniffer(my_smartconfig_handler);
-		//airkiss_set_key(&akcontex, "123", 3);
-        start_airkiss();
+	timer.start(600);
+	
+	airkiss_done.wait();
+	airkiss_send_rsp = 1;
+	wait_us(500 * 1000);
 
-        timer.start(600);
-		
-        airkiss_done.wait();
-        airkiss_send_rsp = 1;
-        wait_us(500 * 1000);
-    }
-
-    //ret = airkiss_wifi.connect(ssid, passwd, NULL, NSAPI_SECURITY_NONE);
-	ret = airkiss_wifi.connect("Bee-WiFi(2.4G)", "Beephone", NULL, NSAPI_SECURITY_NONE);
+    ret = wifi.connect(ssid, passwd, NULL, NSAPI_SECURITY_NONE);
     if (ret==0) {
-        printf("connect to %s success, ip %s\r\n", ssid, airkiss_wifi.get_ip_address());
+        printf("connect to %s success, ip %s\r\n", ssid, wifi.get_ip_address());
     } else {
         printf("connect to %s fail\r\n", ssid);
     }
 
     if (airkiss_send_rsp) {
+		rda5981_flash_erase_sta_data(); 
         rda5981_flash_write_sta_data(ssid, passwd);
         send_rsp_to_apk(random);
 		#ifdef LWIP_DEBUG

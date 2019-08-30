@@ -136,6 +136,7 @@
 .\BUILD\UNO_91H\ARM\.\main.o: ./hal/targets/hal/TARGET_RDA/TARGET_UNO_91H/rda_wdt_api.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./hal/targets/hal/TARGET_RDA/TARGET_UNO_91H/rda_ccfg_api.h
 .\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/cJSON.h
+.\BUILD\UNO_91H\ARM\.\main.o: TESTS/TARGET_RDA/airkiss/airkiss.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/api.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/netbuf.h
 .\BUILD\UNO_91H\ARM\.\main.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip/src/include/lwip/sys.h

@@ -133,3 +133,4 @@
 .\BUILD\UNO_91H\ARM\.\airkiss_func.o: TESTS/TARGET_RDA/airkiss/airkiss.h
 .\BUILD\UNO_91H\ARM\.\airkiss_func.o: ./features/TARGET_RDA/FEATURE_GPADCKEY/gpadckey.h
 .\BUILD\UNO_91H\ARM\.\airkiss_func.o: ./hal/targets/hal/TARGET_RDA/TARGET_UNO_91H/rda_gpadc_api.h
+.\BUILD\UNO_91H\ARM\.\airkiss_func.o: ./features/net/FEATURE_LWIP/lwip-interface/lwip-wifi/arch/TARGET_RDA/TARGET_UNO_91H/inc/rda_sys_wrapper.h

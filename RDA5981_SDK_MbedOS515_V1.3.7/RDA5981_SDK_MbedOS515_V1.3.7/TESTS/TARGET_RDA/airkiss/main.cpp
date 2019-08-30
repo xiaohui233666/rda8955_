@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cJSON.h"
-
+#include "airkiss.h"
 
 #include "lwip/api.h"
 //#include "http.h"
@@ -732,6 +732,7 @@ int main() {
 
  	wifi_main_msgQ = rda_msgQ_create(5);
 	wifi.set_msg_queue(wifi_main_msgQ);
+	rda5991h_smartlink_irq_init();
 	printf("************************************************          start        ************************************************\r\n");
 /* 	Print("start");
 	int test_wifi_ret = wifi.connect("xiaohui", "qwertyui", NULL, NSAPI_SECURITY_NONE);//"ChaoMeng_03F", "cm88889999"

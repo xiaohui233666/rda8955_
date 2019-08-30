@@ -19,6 +19,7 @@ extern "C" {
 #define AIRKISS_ENABLE_CRYPT 0
 #endif
 
+void rda5991h_smartlink_irq_init();
 
 typedef void* (*airkiss_memset_fn) (void* ptr, int value, unsigned int num);
 typedef void* (*airkiss_memcpy_fn) (void* dst, const void* src, unsigned int num);
